@@ -1,0 +1,92 @@
+# 创作工具箱 · Creative Toolbox
+
+面向设计、剪辑、三维和音乐软件的本地桌面工具箱。当前版本 **0.1.0** 实现了通用智能保存的第一条工作流，使用 Python + PySide6。
+
+## 立即试用 Windows 初版
+
+打包完成后打开 `dist/CreativeToolbox/CreativeToolbox.exe`。整个 `CreativeToolbox` 文件夹需要一起保留，不能只复制其中的 EXE。用户无需安装 Python。
+
+1. 启动后进入**观察模式**，不会发送任何按键。
+2. 打开「应用规则」，点击「从前台应用添加」，在 5 秒内切到目标创作软件；也可以手动选择程序。
+3. 设置保存间隔、输入空闲时间和保存快捷键。默认跟随系统，也可以逐应用覆盖。
+4. 先手动保存创作文件，确认快捷键配置正确。观察工作状态，再按需开启本次自动保存。
+5. 录音、演奏、回放或渲染时，使用「仅提醒」或「暂停」。关闭主窗口后可在托盘继续运行；托盘菜单的「退出」会完全停止程序。
+
+随附预设默认关闭，程序名称与 Bundle ID 只是起点，不宣称对应软件已经验证兼容；实际添加方式能避免版本名称不同造成匹配失败。修改规则后回到观察模式，每次启动也始终从观察模式开始。
+
+## 已实现
+
+- 观察、自动、暂停三种运行状态；每应用另有仅提醒选项。
+- 按程序身份匹配应用；Windows 支持完整 EXE 路径或精确文件名，macOS 使用 Bundle ID。
+- 保存最短间隔、输入空闲阈值、前台窗口稳定检查和发送前复查。
+- 检测可观测的按键按住、部分系统弹窗、文字输入控件、菜单和拖拽状态。
+- 跟随系统、Ctrl+S、macOS Command+S、自定义组合键，以及每应用覆盖。
+- 应用添加、编辑、启停、移除；从前台应用自动识别；快捷键录制。
+- 原子写入本地设置、有限大小的本地活动日志、系统托盘入口。
+- 输入或窗口变化取消发送；检测异常暂停；发送失败暂停该应用，避免连续重试。
+- 消耗自己产生的输入时间戳，避免在无人操作时不断重复触发。
+
+## 当前边界
+
+这是通用快捷键初版，**“已发送保存请求”不代表已确认保存成功**。它不读取应用文档内容，不能可靠判断文档是否修改、是否首次保存、是否在全部自定义编辑状态中，也不能读取 DAW 的录音/MIDI 或剪辑软件的渲染状态。OS 键盘空闲不包括所有 MIDI 或数位板工作状态。
+
+25 项自动化测试已通过，覆盖 Windows 原生状态读取、输入包构造、核心规则和 Qt 界面；Windows 独立程序已通过启动与自身界面渲染检查。真实跨进程 Ctrl+S 的隔离测试中，系统曾接受输入，但未取得接收窗口确认；后续尝试又遇到前台焦点被切换，测试按规则取消。**目前不把真实编辑软件的自动保存标为已验证**，应先在可丢弃测试文件中试用。
+
+macOS 适配代码及构建入口已加入，但尚未在 Mac 上运行，尚无经验证的 DMG。版本备份、项目素材归档、开机自启、云同步和各创作软件深度适配尚未实现。
+
+## 开发运行
+
+需要 Python 3.12 或以上。Windows 使用 PowerShell：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe run.py
+```
+
+工作区已准备好环境时，也可以右键运行 `启动开发版.ps1`；这个脚本使用工作区 `.runtime/user` 保存试用配置。
+
+macOS：
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python run.py
+```
+
+macOS 系统适配依赖 PyObjC，需要相应辅助功能和输入监控权限。自定义快捷键的非美式键盘布局需要单独验证。跨平台共用核心和界面，系统接口分别实现；Linux 当前不支持。
+
+默认设置目录为 Windows 的 `%LOCALAPPDATA%/CreativeToolbox`，或 macOS 的 `~/Library/Application Support/CreativeToolbox`。可用 `--data-dir PATH` 指定其他目录。配置不保存自动模式开关；日志不保存文档标题或键入内容。
+
+## 验证与构建
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -v
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe tools\build.py
+```
+
+在 macOS 使用同样的 Python 命令运行 `tools/build.py`，它生成 `.app` 和标为 unsigned 的 `.dmg`。每个目标系统分别构建；Mac 产物面向构建环境的架构，不能直接视为 universal2。面向其他用户正式发布前需另行签名、公证，并完成对应系统和软件版本的实际验收。
+
+Windows 构建脚本会排除错误收集的私有 ICU 库，使 Qt 使用系统提供的兼容接口；此处理修复了“源码可运行、独立程序导入 QtCore 失败”的打包问题。
+
+`tools/windows_smoke.py` 仅向自己创建的临时窗口尝试发送一次 Ctrl+S，并等待该窗口写入测试文件。它需要交互式 Windows 桌面；焦点或输入条件不符合时会取消，不会转而操作其他窗口。这个测试不会自动包含在单元测试中。
+
+`--screenshot artifacts/preview.png` 只渲染工具箱自身界面并退出，用于界面检查。没有自动发布或上传行为。
+
+## 目录
+
+```text
+creative_toolbox/
+  core.py             保存规则、快捷键和状态模型
+  controller.py       决策与发送协调
+  storage.py          配置与本地日志
+  platforms/          Windows / macOS 系统适配
+  ui.py               桌面界面、应用规则和托盘
+  app.py              启动入口与单实例锁
+tests/                决策、原生结构和界面测试
+tools/                打包与隔离测试
+BRAINSTORM.md          产品与架构讨论
+```
+
+目前未创建 GitHub 远程仓库，也未上传本地配置或日志。
