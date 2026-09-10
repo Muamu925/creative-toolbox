@@ -58,6 +58,14 @@ macOS 系统适配依赖 PyObjC，需要相应辅助功能和输入监控权限�
 
 默认设置目录为 Windows 的 `%LOCALAPPDATA%/CreativeToolbox`，或 macOS 的 `~/Library/Application Support/CreativeToolbox`。可用 `--data-dir PATH` 指定其他目录。配置不保存自动模式开关；日志不保存文档标题或键入内容。
 
+## 自动打包与下载
+
+在 [GitHub Actions](https://github.com/Muamu925/creative-toolbox/actions/workflows/build.yml) 中，每次推送 main、提交 PR 或手动运行都会测试并构建 Windows ZIP 和 macOS DMG；构建成功后可在该次运行的 Artifacts 中下载。
+
+推送与 `pyproject.toml` 版本一致的标签（例如 `v0.1.0`）后，两端构建均成功才会自动上传到 [Releases](https://github.com/Muamu925/creative-toolbox/releases)，并附带 `SHA256SUMS.txt` 校验文件。当前自动发布为预览版，安装包未签名或公证。macOS 文件名标注实际构建架构，不是 universal2。
+
+维护者发布步骤：更新 `pyproject.toml` 中的版本号和版本说明，提交并推送代码，然后创建对应版本标签并推送。仅更新 main 不会发布新版本。
+
 ## 验证与构建
 
 ```powershell

@@ -1,8 +1,9 @@
-name: Desktop build
+name: Desktop build and release
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 permissions:
@@ -21,6 +22,14 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
+      - name: Check release version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: python
+        run: |
+          import os, tomllib
+          from pathlib import Path
+          version = tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+          assert os.environ['GITHUB_REF_NAME'] == f'v{version}', 'Tag must match pyproject.toml version'
       - name: Install dependencies
         run: python -m pip install -r requirements.txt -r requirements-build.txt
       - name: Test policy and UI
@@ -29,7 +38,47 @@ jobs:
         run: python -m unittest discover -v
       - name: Build unsigned desktop package
         run: python tools/build.py
+      - name: Bundle Windows portable ZIP
+        if: runner.os == 'Windows'
+        run: python tools/package_windows.py
       - uses: actions/upload-artifact@v4
         with:
           name: CreativeToolbox-${{ matrix.os }}-unsigned
-          path: dist/
+          if-no-files-found: error
+          path: |
+            dist/*.zip
+            dist/*.dmg
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: CreativeToolbox-*-unsigned
+          merge-multiple: true
+          path: packages
+      - name: Publish preview release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd packages
+          sha256sum *.zip *.dmg > SHA256SUMS.txt
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          创作工具箱预览版：Windows 下载 ZIP 后完整解压；macOS 下载与架构对应的 DMG。
+
+          安装包尚未签名或公证。macOS 构建通过不代表已完成真机兼容验收。
+          自动保存请先在可丢弃测试文件中试用，已发送快捷键不代表已确认保存成功。
+          NOTES
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft --prerelease --title "Creative Toolbox $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
+          fi
+          gh release upload "$RELEASE_TAG" *.zip *.dmg SHA256SUMS.txt --clobber
+          gh release edit "$RELEASE_TAG" --draft=false

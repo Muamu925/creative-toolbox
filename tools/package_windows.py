@@ -4,6 +4,7 @@ from importlib import metadata
 import shutil
 import sys
 import zipfile
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 output = ROOT / "dist" / "CreativeToolbox"
@@ -25,7 +26,8 @@ if python_license.exists():
     destination = output / "third-party-licenses" / "Python"
     destination.mkdir(parents=True, exist_ok=True)
     shutil.copy2(python_license, destination / "LICENSE.txt")
-archive = ROOT / "dist" / "CreativeToolbox-0.1.0-Windows-x64.zip"
+version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+archive = ROOT / "dist" / f"CreativeToolbox-{version}-Windows-x64.zip"
 with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as package:
     for file in sorted(output.rglob("*")):
         if file.is_file():

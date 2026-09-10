@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import platform
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 # PyInstaller may replace these generated directories when rebuilding.
@@ -35,6 +37,7 @@ if sys.platform == "win32":
             library.unlink()
             print("Excluded incompatible private ICU; Qt will use the Windows system library.")
 if sys.platform == "darwin":
+    version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     subprocess.run(["hdiutil", "create", "-volname", "Creative Toolbox", "-srcfolder",
                     "dist/CreativeToolbox.app", "-ov", "-format", "UDZO",
-                    "dist/CreativeToolbox-macOS-unsigned.dmg"], check=True)
+                    f"dist/CreativeToolbox-{version}-macOS-{platform.machine()}-unsigned.dmg"], check=True)
