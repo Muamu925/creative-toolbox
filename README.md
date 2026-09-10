@@ -89,4 +89,18 @@ tools/                打包与隔离测试
 BRAINSTORM.md          产品与架构讨论
 ```
 
-目前未创建 GitHub 远程仓库，也未上传本地配置或日志。
+GitHub 仓库：[Muamu925/creative-toolbox](https://github.com/Muamu925/creative-toolbox)。
+
+## Star 增长历史
+
+如果这个工具对你有帮助，欢迎点亮 Star。点击下方图表可查看详细增长历史。
+
+<a href="https://www.star-history.com/?repos=Muamu925%2Fcreative-toolbox&amp;type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&amp;type=date&amp;legend=top-left" />
+    <img alt="Creative Toolbox 的 GitHub Star 增长历史" src="https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&amp;type=date&amp;legend=top-left" width="800" />
+  </picture>
+</a>
+
+图表由 [Star History](https://www.star-history.com/) 提供，数据更新可能存在缓存延迟。
