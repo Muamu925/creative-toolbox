@@ -11,6 +11,8 @@ output = ROOT / "dist" / "CreativeToolbox"
 if not (output / "CreativeToolbox.exe").is_file():
     raise SystemExit("Run tools/build.py on Windows first")
 shutil.copy2(ROOT / "README.md", output / "README.md")
+(output / "docs").mkdir(exist_ok=True)
+shutil.copy2(ROOT / "docs" / "FEATURE_ROADMAP.md", output / "docs" / "FEATURE_ROADMAP.md")
 for name in ("PySide6-Essentials", "shiboken6", "PyInstaller"):
     distribution = metadata.distribution(name)
     for entry in distribution.files or []:

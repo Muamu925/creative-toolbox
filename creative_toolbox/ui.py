@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
+from .design_ui import PalettePage, CalculatorPage, FontPage
 from .controller import Controller, Event
 from .core import Profile, resolve_shortcut
 from .storage import Settings, Store
@@ -49,7 +50,7 @@ QPushButton:disabled { color: #9ca79e; background: #f1f3ef; border-color: #e4e9e
 QPushButton#primary { background: #355e46; color: white; border: none; }
 QPushButton#primary:hover { background: #447755; }
 QPushButton#danger { color: #9a5442; }
-QLineEdit, QSpinBox, QComboBox { background: white; border: 1px solid #d5dfd1;
+QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QPlainTextEdit { background: white; border: 1px solid #d5dfd1;
     border-radius: 6px; padding: 8px; min-height: 19px; selection-background-color: #426e50; }
 QLineEdit:focus, QSpinBox:focus, QComboBox:focus { border: 1px solid #558963; }
 QComboBox QAbstractItemView { background: white; selection-background-color: #e2eddf;
@@ -68,6 +69,9 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 QMenu { background: #fff; border: 1px solid #d5dfd1; padding: 6px; }
 QMenu::item { padding: 8px 22px; }
 QMenu::item:selected { background: #e7efdf; }
+QTabWidget::pane { border: 1px solid #e0e7df; background: #f4f6f3; border-radius: 8px; }
+QTabBar::tab { padding: 10px 18px; background: #e6eee4; color: #355e46; }
+QTabBar::tab:selected { background: #355e46; color: white; }
 QToolTip { background: #203c31; color: white; padding: 6px; border: none; }
 """
 
@@ -299,7 +303,7 @@ class MainWindow(QMainWindow):
         side.addSpacing(35)
         side.addWidget(label("工作空间"))
         self.nav = []
-        for i, name in enumerate(("01   智能保存", "02   应用规则", "03   活动记录", "04   偏好设置")):
+        for i, name in enumerate(("01   智能保存", "02   应用规则", "03   活动记录", "04   偏好设置", "05   配色工作台", "06   创作换算", "07   字体对照")):
             nav = button(name, lambda checked=False, index=i: self.switch_page(index))
             nav.setCheckable(True)
             side.addWidget(nav)
@@ -325,6 +329,10 @@ class MainWindow(QMainWindow):
         self.build_profiles()
         self.build_events()
         self.build_preferences()
+        self.palette_page = PalettePage(store.root / "palettes.json")
+        self.pages.addWidget(self.palette_page)
+        self.pages.addWidget(CalculatorPage())
+        self.pages.addWidget(FontPage())
         bottom = QHBoxLayout()
         self.footer = label("仅记录活动时间与状态，不记录输入内容。", "muted")
         bottom.addWidget(self.footer)
