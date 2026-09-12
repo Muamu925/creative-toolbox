@@ -17,8 +17,8 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.12'
           cache: pip
@@ -41,7 +41,7 @@ jobs:
       - name: Bundle Windows portable ZIP
         if: runner.os == 'Windows'
         run: python tools/package_windows.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: CreativeToolbox-${{ matrix.os }}-unsigned
           if-no-files-found: error
@@ -56,7 +56,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8.0.1
         with:
           pattern: CreativeToolbox-*-unsigned
           merge-multiple: true
