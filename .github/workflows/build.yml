@@ -56,6 +56,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7.0.1
       - uses: actions/download-artifact@v8.0.1
         with:
           pattern: CreativeToolbox-*-unsigned
@@ -77,6 +78,9 @@ jobs:
           安装包尚未签名或公证。macOS 构建通过不代表已完成真机兼容验收。
           自动保存请先在可丢弃测试文件中试用，已发送快捷键不代表已确认保存成功。
           NOTES
+          if [ -f "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md" ]; then
+            cp "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md" "$RUNNER_TEMP/release-notes.md"
+          fi
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --verify-tag --draft --prerelease --title "Creative Toolbox $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
           fi

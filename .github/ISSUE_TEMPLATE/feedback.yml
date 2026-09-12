@@ -1,0 +1,22 @@
+name: Feedback or idea / 试用反馈与想法
+description: Tell us what would make your workflow easier / 告诉我们如何改善你的工作流
+title: "[Feedback] "
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to do? / 你想完成什么任务？
+      description: "Which tools do you use, and which step interrupts your work? / 你使用哪些软件，哪一步最打断创作？"
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help? / 期望的改善
+      description: "A concrete example is welcome. / 欢迎提供具体例子。"
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current workaround / 现在如何解决

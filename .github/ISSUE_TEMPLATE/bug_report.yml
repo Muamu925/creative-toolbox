@@ -1,0 +1,29 @@
+name: Bug report / 问题反馈
+description: Help us reproduce an unexpected result / 描述可复现的问题
+title: "[Bug] "
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: OS and app version / 系统与工具箱版本
+      placeholder: "Windows 11 x64, Creative Toolbox 0.2.0"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 操作步骤
+      description: "For save-related issues, include the target app and its version. / 保存问题请注明目标软件和版本。"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual results / 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Optional screenshots or error text / 可选截图或错误信息
+      description: "Remove private project content and secrets before uploading. / 上传前移除私人项目内容与密钥。"

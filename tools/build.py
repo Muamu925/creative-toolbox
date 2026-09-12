@@ -5,6 +5,9 @@ import subprocess
 import sys
 import platform
 import tomllib
+import shutil
+import tempfile
+from distribution import copy_distribution_docs
 
 ROOT = Path(__file__).resolve().parents[1]
 # PyInstaller may replace these generated directories when rebuilding.
@@ -38,6 +41,11 @@ if sys.platform == "win32":
             print("Excluded incompatible private ICU; Qt will use the Windows system library.")
 if sys.platform == "darwin":
     version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
-    subprocess.run(["hdiutil", "create", "-volname", "Creative Toolbox", "-srcfolder",
-                    "dist/CreativeToolbox.app", "-ov", "-format", "UDZO",
-                    f"dist/CreativeToolbox-{version}-macOS-{platform.machine()}-unsigned.dmg"], check=True)
+    # A fresh staging directory prevents stale docs from entering subsequent DMGs.
+    with tempfile.TemporaryDirectory(prefix="dmg-", dir=ROOT / "build") as temporary:
+        staging = Path(temporary)
+        shutil.copytree(ROOT / "dist" / "CreativeToolbox.app", staging / "CreativeToolbox.app", symlinks=True)
+        copy_distribution_docs(staging)
+        subprocess.run(["hdiutil", "create", "-volname", "Creative Toolbox", "-srcfolder",
+                        str(staging), "-ov", "-format", "UDZO",
+                        f"dist/CreativeToolbox-{version}-macOS-{platform.machine()}-unsigned.dmg"], check=True)

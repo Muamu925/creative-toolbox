@@ -7,6 +7,7 @@ name = "creative-toolbox"
 version = "0.2.0"
 description = "A local-first creative desktop companion for Windows and macOS"
 requires-python = ">=3.12"
+license = {file = "LICENSE"}
 dependencies = [
   "PySide6-Essentials>=6.8,<7",
   "pyobjc-framework-Cocoa>=10; sys_platform == 'darwin'",
