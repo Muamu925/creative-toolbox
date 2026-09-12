@@ -26,9 +26,18 @@ def rgb(value: str) -> tuple[int, int, int]:
     return tuple(int(value[i:i + 2], 16) for i in (1, 3, 5))
 
 
+COPY_FORMATS = ('HEX', 'HEX（无 #）', 'hex（小写）', 'RGB', 'RGB 数值', 'HSL')
+
+
 def format_color(value: str, style: str = 'HEX') -> str:
     value = normalize_hex(value)
     r, g, b = rgb(value)
+    if style == 'HEX（无 #）':
+        return value[1:]
+    if style == 'hex（小写）':
+        return value.lower()
+    if style == 'RGB 数值':
+        return f'{r}, {g}, {b}'
     if style == 'RGB':
         return f'rgb({r}, {g}, {b})'
     if style == 'HSL':
@@ -100,9 +109,24 @@ def validate_library(raw: object) -> dict:
         for color in colors:
             if not isinstance(color, dict) or not isinstance(color.get('name'), str) or len(color['name']) > 80:
                 raise ValueError("颜色名称无效或过长")
-            items.append({'name': color['name'], 'hex': normalize_hex(color.get('hex'))})
+            item = {'name': color['name'], 'hex': normalize_hex(color.get('hex'))}
+            if 'favorite' in color:
+                if not isinstance(color['favorite'], bool):
+                    raise ValueError('收藏状态必须为布尔值')
+                item['favorite'] = color['favorite']
+            items.append(item)
         clean.append({'name': name.strip(), 'colors': items})
-    return {'schema': 1, 'palettes': clean}
+    result = {'schema': 1, 'palettes': clean}
+    if 'preferences' in raw:
+        prefs = raw['preferences']
+        if not isinstance(prefs, dict):
+            raise ValueError('配色偏好格式无效')
+        selected = prefs.get('selected', 0)
+        style = prefs.get('format', 'HEX')
+        if type(selected) is not int or not 0 <= selected < len(clean) or style not in COPY_FORMATS:
+            raise ValueError('色板选择或复制格式无效')
+        result['preferences'] = {'selected': selected, 'format': style}
+    return result
 
 
 def default_library() -> dict:
@@ -143,11 +167,14 @@ class PaletteStore:
     @staticmethod
     def write(path: Path, library: dict):
         clean = validate_library(library)
+        payload = json.dumps(clean, ensure_ascii=False, indent=2)
+        if len(payload.encode('utf-8')) > 2_000_000:
+            raise ValueError('配色库超过 2 MB，请拆分色板后再保存')
         path.parent.mkdir(parents=True, exist_ok=True)
         fd, temporary = tempfile.mkstemp(dir=path.parent, suffix='.tmp')
         try:
             with os.fdopen(fd, 'w', encoding='utf-8') as stream:
-                json.dump(clean, stream, ensure_ascii=False, indent=2)
+                stream.write(payload)
                 stream.flush()
                 os.fsync(stream.fileno())
             os.replace(temporary, path)

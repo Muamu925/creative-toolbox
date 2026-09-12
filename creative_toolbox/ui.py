@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
+from . import __version__
 from .design_ui import PalettePage, CalculatorPage, FontPage
 from .controller import Controller, Event
 from .core import Profile, resolve_shortcut
@@ -310,7 +311,7 @@ class MainWindow(QMainWindow):
             self.nav.append(nav)
         side.addStretch()
         side.addWidget(label("留住每一次灵感。"))
-        side.addWidget(label("本地运行  /  v0.1.0"))
+        side.addWidget(label(f"本地运行  /  v{__version__}"))
         root.addWidget(sidebar)
         content = QVBoxLayout()
         content.setContentsMargins(32, 25, 32, 16)
@@ -508,6 +509,7 @@ class MainWindow(QMainWindow):
         self.tray.setToolTip("创作工具箱 · 观察模式")
         menu = QMenu(self)
         menu.addAction("打开工具箱", self.show_main)
+        menu.addAction("悬浮色卡", self.palette_page.open_floating)
         self.tray_pause = menu.addAction("暂停保护", self.toggle_pause)
         menu.addAction("切回观察模式", self.disarm)
         menu.addSeparator()
@@ -539,6 +541,7 @@ class MainWindow(QMainWindow):
     def quit_app(self):
         self.quitting = True
         self.timer.stop()
+        self.palette_page.close_floating()
         self.tray.hide()
         QApplication.instance().quit()
 

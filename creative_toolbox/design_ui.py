@@ -15,9 +15,12 @@ from PySide6.QtWidgets import (
 )
 
 from .design_core import (
-    PaletteStore, contrast_ratio, css_palette, format_color, harmony,
+    COPY_FORMATS, PaletteStore, contrast_ratio, css_palette, format_color, harmony,
     normalize_hex, note_ms, print_mm, print_pixels, scaled_height,
 )
+
+from .palette_model import PaletteModel
+from .palette_widgets import FloatingPalette, export_palette_png
 
 
 def text(value, name=''):
@@ -82,8 +85,9 @@ def image_colors(path: str) -> list[str]:
 class PalettePage(QWidget):
     def __init__(self, path: Path):
         super().__init__()
-        self.store = PaletteStore(path)
-        self.library = self.store.load()
+        self.model = PaletteModel(path, self)
+        self.store = self.model.store
+        self.floating = None
         self.edit_index = None
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -102,7 +106,8 @@ class PalettePage(QWidget):
         row.addWidget(action('重命名', self.rename_palette))
         row.addWidget(action('删除色板', self.remove_palette))
         self.format = QComboBox()
-        self.format.addItems(['HEX', 'RGB', 'HSL'])
+        self.format.addItems(COPY_FORMATS)
+        self.format.setMaximumWidth(165)
         row.addWidget(self.format)
         layout.addLayout(row)
         bar = QHBoxLayout()
@@ -111,6 +116,18 @@ class PalettePage(QWidget):
             bar.addWidget(action(title, callback))
         bar.addStretch()
         layout.addLayout(bar)
+        tools = QHBoxLayout()
+        tools.addWidget(action('悬浮色卡', self.open_floating))
+        tools.addWidget(action('导出 PNG', self.export_png))
+        tools.addWidget(action('复制整板', self.copy_palette))
+        self.undo_button = action('撤销', self.model.undo)
+        self.undo_button.setToolTip('撤销本次运行中最近 20 次色板修改')
+        tools.addWidget(self.undo_button)
+        self.favorites_only = QCheckBox('仅收藏')
+        tools.addWidget(self.favorites_only)
+        tools.addStretch()
+        layout.addLayout(tools)
+        self.favorites_only.toggled.connect(self.render)
         area = QScrollArea()
         area.setWidgetResizable(True)
         self.cards = QWidget()
@@ -141,47 +158,55 @@ class PalettePage(QWidget):
         self.status = text(self.store.warning or '点击色块复制；可编辑名称、色号，并导出整个配色库。', 'muted')
         layout.addWidget(self.status)
         self.palettes.currentIndexChanged.connect(self.palette_changed)
-        self.format.currentTextChanged.connect(self.render)
+        self.format.currentTextChanged.connect(lambda style: self.model.set_preferences(style=style))
+        self.model.changed.connect(self.sync_model)
+        self.model.message.connect(self.status.setText)
         self.build_contrast()
-        self.refresh()
+        self.sync_model(True)
 
-    def current(self):
-        return self.library['palettes'][max(0, self.palettes.currentIndex())]
+    @property
+    def library(self):
+        return self.model.library
 
-    def refresh(self, selected=0):
+    def sync_model(self, reset=False):
         self.palettes.blockSignals(True)
         self.palettes.clear()
         self.palettes.addItems([p['name'] for p in self.library['palettes']])
-        self.palettes.setCurrentIndex(min(selected, self.palettes.count() - 1))
+        self.palettes.setCurrentIndex(self.model.selected)
         self.palettes.blockSignals(False)
-        self.cancel_edit()
+        self.format.blockSignals(True)
+        self.format.setCurrentText(self.model.copy_format)
+        self.format.blockSignals(False)
+        if reset:
+            self.cancel_edit()
+        self.undo_button.setEnabled(bool(self.model.history))
         self.render()
+
+    def current(self):
+        return self.model.palette
 
     def persist(self, candidate, selected=None):
-        try:
-            self.library = self.store.save(candidate)
-        except (ValueError, OSError) as exc:
-            self.status.setText(f'未保存：{exc}')
-            return False
-        self.refresh(self.palettes.currentIndex() if selected is None else selected)
-        self.status.setText('已保存到本机。')
-        return True
+        return self.model.commit(candidate, selected)
 
-    def palette_changed(self):
-        self.cancel_edit()
-        self.render()
+    def palette_changed(self, index):
+        if index >= 0:
+            self.model.set_preferences(selected=index)
 
     def render(self):
         while self.grid.count():
             item = self.grid.takeAt(0)
             if item.widget():
+                item.widget().hide()
                 item.widget().deleteLater()
         colors = self.current()['colors']
-        if not colors:
-            self.grid.addWidget(text('色板还是空的。在下方输入色号，添加第一个颜色。', 'muted'), 0, 0)
-        for i, color in enumerate(colors):
+        displayed = [(i, c) for i, c in enumerate(colors) if not self.favorites_only.isChecked() or c.get('favorite', False)]
+        if not displayed:
+            hint = '还没有收藏颜色。取消筛选后，点击颜色下方的收藏按钮。' if self.favorites_only.isChecked() else '色板还是空的。在下方输入色号，添加第一个颜色。'
+            self.grid.addWidget(text(hint, 'muted'), 0, 0, 1, 3)
+        for position, (i, color) in enumerate(displayed):
             card = QFrame()
             card.setObjectName('card')
+            card.setMinimumHeight(230)
             col = QVBoxLayout(card)
             value = format_color(color['hex'], self.format.currentText())
             swatch = action(value, lambda checked=False, v=value: self.copy_color(v))
@@ -190,14 +215,70 @@ class PalettePage(QWidget):
             swatch.setMinimumHeight(86)
             swatch.setAccessibleName(f'{color["name"]}，复制 {value}')
             col.addWidget(swatch)
-            col.addWidget(text(color['name'] or '未命名颜色'))
+            full_name = color['name'] or '未命名颜色'
+            name_label = text(full_name)
+            name_label.setWordWrap(False)
+            name_label.setText(name_label.fontMetrics().elidedText(full_name, Qt.TextElideMode.ElideRight, 190))
+            name_label.setToolTip(full_name)
+            col.addWidget(name_label)
             controls = QHBoxLayout()
             controls.addWidget(action('编辑', lambda checked=False, index=i: self.edit_color(index)))
             controls.addWidget(action('移除', lambda checked=False, index=i: self.remove_color(index)))
             col.addLayout(controls)
-            self.grid.addWidget(card, i // 3, i % 3)
+            extras = QHBoxLayout()
+            favorite = action('★ 已收藏' if color.get('favorite') else '☆ 收藏', lambda checked=False, index=i: self.model.toggle_favorite(index))
+            extras.addWidget(favorite, 1)
+            for direction, offset in [('←', -1), ('→', 1)]:
+                move = action(direction, lambda checked=False, index=i, delta=offset: self.model.move(index, delta))
+                move.setToolTip('前移一位' if offset < 0 else '后移一位')
+                move.setAccessibleName('前移颜色' if offset < 0 else '后移颜色')
+                move.setFixedWidth(42)
+                move.setEnabled(not self.favorites_only.isChecked() and 0 <= i + offset < len(colors))
+                extras.addWidget(move)
+            col.addLayout(extras)
+            self.grid.addWidget(card, position // 3, position % 3)
         for i in range(3):
             self.grid.setColumnStretch(i, 1)
+
+    def open_floating(self):
+        if self.floating is None:
+            self.floating = FloatingPalette(self.model)
+        self.floating.showNormal()
+        self.floating.raise_()
+        self.floating.keep_on_screen()
+
+    def close_floating(self):
+        if self.floating is not None:
+            self.floating.close()
+
+    def closeEvent(self, event):
+        self.close_floating()
+        super().closeEvent(event)
+
+    def copy_palette(self):
+        values = [format_color(c['hex'], self.model.copy_format) for c in self.current()['colors']]
+        if not values:
+            self.status.setText('色板为空，没有可复制的颜色。')
+            return
+        copy('\n'.join(values))
+        self.status.setText(f'已逐行复制当前色板全部 {len(values)} 个颜色。')
+
+    def export_png(self):
+        if not self.current()['colors']:
+            self.status.setText('色板为空，请先添加颜色。')
+            return
+        path, _ = QFileDialog.getSaveFileName(self, '导出当前色板 PNG', 'creative-palette.png', 'PNG 图片 (*.png)')
+        if not path:
+            return
+        target = Path(path)
+        if target.suffix.lower() != '.png':
+            self.status.setText('请使用 .png 文件扩展名。')
+            return
+        try:
+            export_palette_png(self.current(), target)
+            self.status.setText('已导出当前色板全部颜色，包含完整名称与 HEX 色号。')
+        except (OSError, ValueError) as exc:
+            self.status.setText(f'未导出：{exc}')
 
     def copy_color(self, value):
         copy(value)
@@ -226,7 +307,7 @@ class PalettePage(QWidget):
         if self.edit_index is None:
             colors.append(color)
         else:
-            colors[self.edit_index] = color
+            colors[self.edit_index].update(color)
         self.persist(candidate)
 
     def remove_color(self, index):

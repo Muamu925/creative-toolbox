@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "creative-toolbox"
-version = "0.1.0"
+version = "0.2.0"
 description = "A local-first creative desktop companion for Windows and macOS"
 requires-python = ">=3.12"
 dependencies = [
