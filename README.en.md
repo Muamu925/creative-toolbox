@@ -1,39 +1,59 @@
 # Creative Toolbox
 
-**Keep your palette beside your creative app. Click a color to copy it.**
+**Everyday utilities for design, video editing, and music creation — together on your desktop.**
 
-A local desktop companion with floating palettes, image color extraction, font comparison, design calculators, and configurable idle-save rules.
+A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-[**Download Windows 0.2.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.2.0/CreativeToolbox-0.2.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.2.0) · [简体中文](README.md)
+**Version 0.2.0 is an early preview.** It includes configurable idle-save rules, font comparison, design calculators, and color tools. Reference boards, project management, batch delivery, and media processing are planned, not implemented.
 
-![Actual palette workflow: float, choose a format, copy, favorite, export](assets/demo/palette-demo.gif)
+[**Download Windows 0.2.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.2.0/CreativeToolbox-0.2.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.2.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
-*Actual UI states with isolated sample data, presented as a short looping sequence. The app interface is currently primarily in Chinese; this page provides English guidance.*
+## Available today
+
+| Module | Implemented capabilities | When to use it |
+| --- | --- | --- |
+| **Creative safeguards** | Per-app save shortcuts, idle thresholds and intervals; observation, reminder and automatic modes | Assist saving during idle moments; every launch starts in observation mode |
+| **Fonts and text** | Compare two installed fonts with your own text, size and bold styling; copy font names | Explore headline and body font choices |
+| **Size and rhythm calculators** | Millimeters / pixels / PPI, proportional scaling, BPM-to-note durations including dotted and triplet values | Calculate output dimensions, proportions or delay settings |
+| **Color and contrast** | Custom palettes, floating swatches, image colors, text contrast, JSON / CSS / PNG export | Reuse colors, check text/background combinations and share swatches |
+
+Tools work independently, without creating a project or enabling automatic saving. No account is required. Palettes, app rules and activity metadata stay on your computer; image color extraction does not upload images. The interface is currently primarily Chinese.
 
 ## Try it in two minutes
 
 1. Download and fully extract the Windows ZIP. Open `CreativeToolbox/CreativeToolbox.exe`. Keep the entire folder together. Python is not required.
-2. Select **配色工作台** (Palette workspace) in the sidebar. Start with the sample palette, or choose **图片提色** (Extract colors) to select a local image.
-3. Click **悬浮色卡** (Floating palette), choose your copy format, and click a swatch. Paste into your creative app yourself. Use **置顶** to keep the panel on top, or **折叠** to collapse it.
+2. Choose **字体对照** (Font comparison), **创作换算** (Calculators), or **配色工作台** (Palette workspace) for your task, then supply your text, values or image.
+3. For idle-save assistance, configure the target app and shortcut in **应用规则** (App rules). Check timing in **智能保存** (Smart Save) observation mode, then test with disposable files.
 
-The main window can close to the system tray when available. Reopen or quit from the tray menu. You do not need to enable automatic saving to use the color tools.
+The main window can close to the system tray when available. Reopen or quit from the tray menu.
 
-## What is included?
+<details>
+<summary>Color module example: floating swatches, favorites and export</summary>
 
-| Tool | What it does |
+![Actual color-module workflow: float, choose a format, copy, favorite, export](assets/demo/palette-demo.gif)
+
+Actual UI states with isolated sample data in a short looping sequence. This demo covers the color module.
+
+Copy HEX with or without `#`, lowercase HEX, RGB, numeric RGB or HSL, plus entire palettes and CSS variables. Name, favorite, filter and reorder colors; undo the last 20 changes during the current session. Favorites, order, palette selection and copy format persist.
+
+![Example exported PNG swatch sheet](assets/demo/palette-sheet.png)
+
+</details>
+
+## Where the toolbox is heading
+
+These are planned capabilities, not features in the current downloads. Priorities may change with user feedback.
+
+| Direction | Proposed additions |
 | --- | --- |
-| Floating palettes | Copy HEX with or without `#`, lowercase HEX, RGB, numeric RGB, or HSL; stays in sync with the workspace |
-| Palette library | Named palettes and colors, favorites, filtering, arrow-based reordering, 20-step session undo, JSON import/export, CSS variables |
-| Image color extraction | Create a palette with up to six approximate dominant colors from a local image |
-| PNG swatch sheets | Export the full palette with names, HEX values, and an sRGB profile |
-| Text contrast | Preview foreground/background colors and check WCAG AA/AAA text contrast thresholds |
-| Font comparison | Compare two installed fonts using your own text; adjust size and bold styling |
-| Design calculators | Millimeters/pixels, PPI, proportional resizing, and BPM-to-note durations with dotted/triplet options |
-| Idle-save rules | Configure save shortcuts, idle time, and intervals for selected apps; every launch begins in observation mode |
+| **Unified access** | Tool search, favorites, recent tools and design / video / music presets |
+| **References and projects** | Floating reference boards, project specification cards, folders and reference links |
+| **Assets and delivery** | Rename preview and undo, multiple image sizes, contact sheets and delivery checklists |
+| **Video and motion** | Media information, timecode/frame calculations and frame extraction, followed by conversion |
+| **Music and audio** | Tap Tempo, bar duration, pitch/frequency conversion and audio specification checks |
+| **Text and productivity** | Font favorites, typography samples, text cleanup and reusable snippets |
 
-![Example swatch sheet exported by Creative Toolbox](assets/demo/palette-sheet.png)
-
-Palettes, rules, and activity metadata stay on your computer. Image extraction does not upload your image. No account is required. Favorites, order, the selected palette, and copy format persist; undo history lasts for the current session only.
+The proposed modules share project specifications, assets and export settings so results can move between tools. See the [feature map](docs/FEATURE_ROADMAP.md) and [next-stage specification](docs/NEXT_STAGE_SPEC.md), currently in Chinese.
 
 ## Platform status
 

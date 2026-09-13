@@ -1,34 +1,35 @@
-# 预览版试用与传播
+# 综合创作工具箱：试用与传播
 
-先让真实用户顺利完成一次“下载 → 打开 → 悬浮色卡复制”，再扩大分享范围。Star 是反馈之一，也应关注下载、具体使用反馈和重复出现的问题。
+更新：2026-09-13。对外主张与 README 一致：为设计、剪辑与音乐创作，把常用小工具放在一起。展示现有模块与规划方向时明确区分状态。
 
 ## 首轮试用
 
-- 邀请 5–10 位设计、剪辑或音乐创作者试用；分别记录系统、主要创作软件、安装是否成功、第一次复制色号是否顺利。
-- macOS 优先补充真机安装、权限、置顶、全屏和切换应用的反馈。
-- 先修复阻止试用的问题，再按重复出现的场景排序功能需求。
-- 每周由维护者查看 GitHub 流量、Release 下载次数和新反馈；记录改动与分享日期，不把 Star 数量承诺为结果。
+- 邀请 5–10 位不同领域创作者，记录系统、主要软件、安装结果，以及完成一个具体任务的障碍。
+- 设计用户可尝试字体对照或尺寸换算；音乐用户可尝试 BPM 音符时长；色彩工具作为另一条独立体验。视频用户可试用现有通用换算并反馈需求，当前尚无专用媒体处理。
+- 智能保存先观察触发时机，仅在可丢弃文档中试用；macOS 重点补充安装、权限、置顶、全屏与应用切换反馈。
+- 后续演示按任务轮换：字体与尺寸、保存规则、色彩，再逐步加入已发布的新模块。单个模块演示注明范围。
+- 每周由维护者查看 GitHub 流量、Release 下载与反馈，记录改动和分享日期。Star 是反馈之一，不承诺增长数量。
 
-## 可修改的中文分享草稿（尚未发布）
+## 中文分享草稿（尚未发布）
 
-我做了一个本地运行的小工具「创作工具箱」。画图或做视觉方案时，可以把项目配色卡悬浮在创作软件旁边，点一下复制色号，减少来回找颜色的操作。
+我正在做「创作工具箱」：把设计、剪辑和音乐创作中经常需要的小工具，集中到一个本地桌面应用里。
 
-目前支持色板收藏与排序、图片提色、PNG 色卡导出，还带有字体对照、对比度与尺寸 / BPM 换算。无需账号，图片提色在本机完成。项目代码采用 MIT。
+当前 0.2.0 预览版已经有智能保存规则、字体对照、尺寸与 BPM 换算，以及悬浮色卡等色彩工具。下一步计划加入参考图画板、工具搜索、文件整理和更多音视频辅助功能。
 
-Windows 便携预览版已经提供下载；macOS 仍是实验版，界面目前以中文为主。特别希望听听：你在日常创作中，哪个小操作最值得省掉？
+工具可以独立使用，无需账号，项目代码采用 MIT。Windows 有便携下载；macOS 目前是实验版，界面以中文为主。想听听你工作中反复切换软件才能完成的那些小任务。
 
-项目与演示：https://github.com/Muamu925/creative-toolbox
+项目与最新功能：https://github.com/Muamu925/creative-toolbox
 下载：https://github.com/Muamu925/creative-toolbox/releases/tag/v0.2.0
 
 ## English sharing draft (not posted)
 
-I built Creative Toolbox, a local desktop companion for creative work. Its floating palette keeps project colors beside your apps so you can click to copy a color value.
+I am building Creative Toolbox: local desktop utilities for the small tasks that come up across design, video editing and music creation.
 
-The preview includes favorites, image color extraction, PNG swatch sheets, font comparison and design calculators. No account is required. Project code is MIT licensed.
+The 0.2.0 preview includes per-app idle-save rules, font comparison, size and BPM calculators, and color tools. Reference boards, tool search, file organization and more media utilities are planned additions.
 
-A Windows portable download is available. macOS is experimental, and the interface is currently primarily Chinese. I would appreciate feedback on the small repetitive tasks that interrupt your creative workflow.
+Tools work independently, no account is required, and project code is MIT licensed. A Windows portable download is available; macOS is experimental and the interface is currently primarily Chinese. What small task makes you switch apps repeatedly during creative work?
 
-Demo and downloads: https://github.com/Muamu925/creative-toolbox
+Project and downloads: https://github.com/Muamu925/creative-toolbox
 
 ## 重新生成真实界面演示
 
