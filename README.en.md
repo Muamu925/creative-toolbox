@@ -4,16 +4,16 @@
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.2.0 is an early preview.** It includes configurable idle-save rules, font comparison, design calculators, and color tools. Reference boards, project management, batch delivery, and media processing are planned, not implemented.
+**Version 0.3.0 is an early preview.** It includes configurable idle-save rules, font organization and comparison, design calculators, and color tools. Reference boards, project management, batch delivery, and media processing are planned, not implemented.
 
-[**Download Windows 0.2.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.2.0/CreativeToolbox-0.2.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.2.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.3.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.3.0/CreativeToolbox-0.3.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.3.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
 ## Available today
 
 | Module | Implemented capabilities | When to use it |
 | --- | --- | --- |
 | **Creative safeguards** | Per-app save shortcuts, idle thresholds and intervals; observation, reminder and automatic modes | Assist saving during idle moments; every launch starts in observation mode |
-| **Fonts and text** | Compare two installed fonts with your own text, size and bold styling; copy font names | Explore headline and body font choices |
+| **Fonts and text** | Search installed fonts; groups, tags, favorites, notes and backup; custom samples and 2–4 font comparisons with available styles | Organize project candidates and compare typography |
 | **Size and rhythm calculators** | Millimeters / pixels / PPI, proportional scaling, BPM-to-note durations including dotted and triplet values | Calculate output dimensions, proportions or delay settings |
 | **Color and contrast** | Custom palettes, floating swatches, image colors, text contrast, JSON / CSS / PNG export | Reuse colors, check text/background combinations and share swatches |
 
@@ -22,10 +22,23 @@ Tools work independently, without creating a project or enabling automatic savin
 ## Try it in two minutes
 
 1. Download and fully extract the Windows ZIP. Open `CreativeToolbox/CreativeToolbox.exe`. Keep the entire folder together. Python is not required.
-2. Choose **字体对照** (Font comparison), **创作换算** (Calculators), or **配色工作台** (Palette workspace) for your task, then supply your text, values or image.
+2. Choose **字体工作台** (Font workspace), **创作换算** (Calculators), or **配色工作台** (Palette workspace) for your task, then supply your text, values or image.
 3. For idle-save assistance, configure the target app and shortcut in **应用规则** (App rules). Check timing in **智能保存** (Smart Save) observation mode, then test with disposable files.
 
 The main window can close to the system tray when available. Reopen or quit from the tray menu.
+
+<details>
+<summary>Font workspace example: groups, tags and comparison</summary>
+
+![Font workspace with local fonts and sample project groups](assets/demo/font-library.png)
+
+![Compare available font styles](assets/demo/font-compare.png)
+
+Actual Windows UI with installed fonts and isolated sample metadata. Multi-select fonts to add them to groups, favorite them or apply tags. A font can belong to multiple groups. Organization is stored locally in fonts.json; JSON backups merge metadata and do not contain font files.
+
+This version organizes system-available fonts. Uninstalled font folders and system activation are not implemented. Family matching uses the full local Qt family name; unavailable families retain their metadata. Missing glyphs may fall back to another font. See the [usage guide (Chinese)](docs/FONT_WORKSPACE.md).
+
+</details>
 
 <details>
 <summary>Color module example: floating swatches, favorites and export</summary>
@@ -51,7 +64,7 @@ These are planned capabilities, not features in the current downloads. Prioritie
 | **Assets and delivery** | Rename preview and undo, multiple image sizes, contact sheets and delivery checklists |
 | **Video and motion** | Media information, timecode/frame calculations and frame extraction, followed by conversion |
 | **Music and audio** | Tap Tempo, bar duration, pitch/frequency conversion and audio specification checks |
-| **Text and productivity** | Font favorites, typography samples, text cleanup and reusable snippets |
+| **Text and productivity** | Uninstalled font folders, smart groups, glyph coverage checks, text cleanup and reusable snippets |
 
 The proposed modules share project specifications, assets and export settings so results can move between tools. See the [feature map](docs/FEATURE_ROADMAP.md) and [next-stage specification](docs/NEXT_STAGE_SPEC.md), currently in Chinese.
 
@@ -79,7 +92,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 47 automated tests for save rules, palette persistence, floating-window synchronization, undo, calculations, and PNG export. Tests do not replace validation in real creative applications.
+There are 66 automated tests for save rules, palette persistence, floating-window synchronization, undo, calculations, and PNG export. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 

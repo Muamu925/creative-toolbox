@@ -304,7 +304,7 @@ class MainWindow(QMainWindow):
         side.addSpacing(35)
         side.addWidget(label("工作空间"))
         self.nav = []
-        for i, name in enumerate(("01   智能保存", "02   应用规则", "03   活动记录", "04   偏好设置", "05   配色工作台", "06   创作换算", "07   字体对照")):
+        for i, name in enumerate(("01   智能保存", "02   应用规则", "03   活动记录", "04   偏好设置", "05   配色工作台", "06   创作换算", "07   字体工作台")):
             nav = button(name, lambda checked=False, index=i: self.switch_page(index))
             nav.setCheckable(True)
             side.addWidget(nav)
@@ -333,9 +333,10 @@ class MainWindow(QMainWindow):
         self.palette_page = PalettePage(store.root / "palettes.json")
         self.pages.addWidget(self.palette_page)
         self.pages.addWidget(CalculatorPage())
-        self.pages.addWidget(FontPage())
+        self.font_page = FontPage(store.root / "fonts.json")
+        self.pages.addWidget(self.font_page)
         bottom = QHBoxLayout()
-        self.footer = label("仅记录活动时间与状态，不记录输入内容。", "muted")
+        self.footer = label("自动保存日志不记录按键内容；工具资料保存在本机。", "muted")
         bottom.addWidget(self.footer)
         bottom.addStretch()
         content.addLayout(bottom)

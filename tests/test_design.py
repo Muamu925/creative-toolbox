@@ -153,7 +153,7 @@ class DesignUITests(unittest.TestCase):
         self.assertEqual(page.ratio_result.text(), '640 × 360 px')
         page.bpm.setValue(60)
         self.assertIn('1000.00 ms', page.tempo_result.text())
-        font = FontPage()
+        font = FontPage(available={"Test Sans": {"styles": ["Regular"], "systems": ["Latin"], "mono": False}})
         font.sample.setPlainText('测试 Aa 123')
         font.size.setValue(40)
         for preview in font.previews:

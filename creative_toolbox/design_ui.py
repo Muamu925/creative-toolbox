@@ -512,57 +512,5 @@ class CalculatorPage(QWidget):
         self.tempo_result.setText('\n'.join(f'1/{n} 音符     {note_ms(self.bpm.value(), n, self.note_modifier.currentText()):.2f} ms' for n in (1, 2, 4, 8, 16, 32)))
 
 
-class FontPage(QWidget):
-    def __init__(self):
-        super().__init__()
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(text('让文字，找到合适的声音。', 'title'))
-        root.addWidget(text('对照本机已安装字体；输入同一段文案，比较两种排版效果。', 'muted'))
-        self.sample = QPlainTextEdit('创作，让灵感被看见。\nThe quick brown fox jumps over the lazy dog.\n0123456789  Aa Bb Cc')
-        self.sample.setMaximumHeight(110)
-        root.addWidget(self.sample)
-        controls = QHBoxLayout()
-        controls.addWidget(text('字号 pt'))
-        self.size = QSpinBox()
-        self.size.setRange(8, 96)
-        self.size.setValue(28)
-        controls.addWidget(self.size)
-        self.bold = QCheckBox('粗体')
-        controls.addWidget(self.bold)
-        controls.addStretch()
-        root.addLayout(controls)
-        columns = QHBoxLayout()
-        self.fonts, self.previews = [], []
-        for i in range(2):
-            col = QVBoxLayout()
-            family = QFontComboBox()
-            self.fonts.append(family)
-            col.addWidget(family)
-            preview = QPlainTextEdit()
-            preview.setReadOnly(True)
-            self.previews.append(preview)
-            col.addWidget(preview, 1)
-            col.addWidget(action('复制字体名称', lambda checked=False, widget=family: self.copy_family(widget)))
-            family.currentFontChanged.connect(self.update_preview)
-            columns.addLayout(col, 1)
-        root.addLayout(columns, 1)
-        self.status = text('缺少字形时系统可能回退到其他字体。预览不代表字体拥有商业使用授权。', 'muted')
-        root.addWidget(self.status)
-        self.sample.textChanged.connect(self.update_preview)
-        self.size.valueChanged.connect(self.update_preview)
-        self.bold.toggled.connect(self.update_preview)
-        self.update_preview()
-
-    def copy_family(self, field):
-        copy(field.currentFont().family())
-        self.status.setText('已复制字体名称：' + field.currentFont().family())
-
-    def update_preview(self):
-        for field, preview in zip(self.fonts, self.previews):
-            font = QFont(field.currentFont())
-            font.setPointSize(self.size.value())
-            font.setBold(self.bold.isChecked())
-            preview.setFont(font)
-            preview.setStyleSheet(f"font-size:{self.size.value()}pt; font-weight:{700 if self.bold.isChecked() else 400};")
-            preview.setPlainText(self.sample.toPlainText())
+# Public import retained for existing callers.
+from .fonts.page import FontPage
