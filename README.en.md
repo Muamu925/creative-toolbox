@@ -60,13 +60,13 @@ These are planned capabilities, not features in the current downloads. Prioritie
 | Direction | Proposed additions |
 | --- | --- |
 | **Unified access** | Tool search, favorites, recent tools and design / video / music presets |
-| **References and projects** | Floating reference boards, project specification cards, folders and reference links |
-| **Assets and delivery** | Rename preview and undo, multiple image sizes, contact sheets and delivery checklists |
+| **Personal resource library** | Image inbox, collections, tags, source records and floating references; connections to palettes and font metadata |
+| **Projects and delivery** | Specification cards, resource references, project copies and image output; reference boards and batch naming follow later |
 | **Video and motion** | Media information, timecode/frame calculations and frame extraction, followed by conversion |
 | **Music and audio** | Tap Tempo, bar duration, pitch/frequency conversion and audio specification checks |
 | **Text and productivity** | Uninstalled font folders, smart groups, glyph coverage checks, text cleanup and reusable snippets |
 
-The proposed modules share project specifications, assets and export settings so results can move between tools. See the [feature map](docs/FEATURE_ROADMAP.md) and [next-stage specification](docs/NEXT_STAGE_SPEC.md), currently in Chinese.
+The proposed sequence is **improve access and foundations → build a personal resource library → combine resources into projects and deliverables**. Tools remain usable independently. See the [architecture and development plan](docs/ARCHITECTURE_PLAN.md) for implementation order and acceptance criteria, and the [feature map](docs/FEATURE_ROADMAP.md) for candidate capabilities, currently in Chinese.
 
 ## Platform status
 
