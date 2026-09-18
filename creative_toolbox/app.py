@@ -14,7 +14,7 @@ def main() -> int:
     from PySide6.QtCore import QLockFile, QTimer
     from PySide6.QtGui import QFont
     from PySide6.QtWidgets import QApplication, QMessageBox
-    from .platforms import create_backend
+    from .platforms import load_backend
     from .storage import Store, data_directory
     from .ui import MainWindow, STYLE
 
@@ -32,11 +32,7 @@ def main() -> int:
     if not lock.tryLock(100):
         QMessageBox.information(None, "工具箱已在运行", "请从系统托盘或菜单栏打开已有的工具箱。")
         return 0
-    try:
-        backend = create_backend()
-    except Exception as exc:
-        QMessageBox.critical(None, "启动失败", f"系统适配无法加载：{type(exc).__name__}: {exc}")
-        return 1
+    backend = load_backend()
     window = MainWindow(backend, store, store.load())
     window.show()
     if args.screenshot:

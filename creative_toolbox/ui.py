@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
 )
 
 from . import __version__
-from .design_ui import PalettePage, CalculatorPage, FontPage
+from .workspace import TOOL_BY_ID, WorkspaceStore
+from .workspace_ui import WorkspacePage
 from .controller import Controller, Event
 from .core import Profile, resolve_shortcut
 from .storage import Settings, Store
@@ -47,9 +48,11 @@ QPushButton { background: #ffffff; color: #2c4a3b; border: 1px solid #d7e0d5;
     border-radius: 7px; padding: 9px 14px; font-weight: 600; }
 QPushButton:hover { background: #edf2e9; border-color: #aabfa7; }
 QPushButton:pressed { background: #dfe9d9; }
+QPushButton:checked { background: #e2eddf; border-color: #88a584; }
 QPushButton:disabled { color: #9ca79e; background: #f1f3ef; border-color: #e4e9e1; }
 QPushButton#primary { background: #355e46; color: white; border: none; }
 QPushButton#primary:hover { background: #447755; }
+QPushButton#primary:disabled { background: #e4e9e1; color: #8c998f; }
 QPushButton#danger { color: #9a5442; }
 QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QPlainTextEdit { background: white; border: 1px solid #d5dfd1;
     border-radius: 6px; padding: 8px; min-height: 19px; selection-background-color: #426e50; }
@@ -280,6 +283,10 @@ class MainWindow(QMainWindow):
         self.events: list[tuple[str, Event]] = []
         self.quitting = False
         self.capture_seconds = 0
+        self.protection_available = getattr(backend, "available", True)
+        self.protection_reason = getattr(backend, "unavailable_reason", "")
+        self.workspace = WorkspaceStore(store.root / "workspace.json")
+        self.tool_pages = {}
         self.setWindowTitle("创作工具箱 · Creative Toolbox")
         self.setWindowIcon(app_icon())
         self.resize(1180, 800)
@@ -303,13 +310,18 @@ class MainWindow(QMainWindow):
         side.addWidget(label("CREATIVE TOOLBOX"))
         side.addSpacing(35)
         side.addWidget(label("工作空间"))
-        self.nav = []
-        for i, name in enumerate(("01   智能保存", "02   应用规则", "03   活动记录", "04   偏好设置", "05   配色工作台", "06   创作换算", "07   字体工作台")):
-            nav = button(name, lambda checked=False, index=i: self.switch_page(index))
+        self.nav = {}
+        for key, name in (("home", "首页"), ("library", "资源库"), ("tools", "工具")):
+            nav = button(name, lambda checked=False, route=key: self.navigate(route))
             nav.setCheckable(True)
             side.addWidget(nav)
-            self.nav.append(nav)
+            self.nav[key] = nav
         side.addStretch()
+        for key, name in (("protection", "创作保护"), ("settings", "设置")):
+            nav = button(name, lambda checked=False, route=key: self.navigate(route))
+            nav.setCheckable(True)
+            side.addWidget(nav)
+            self.nav[key] = nav
         side.addWidget(label("留住每一次灵感。"))
         side.addWidget(label(f"本地运行  /  v{__version__}"))
         root.addWidget(sidebar)
@@ -317,12 +329,25 @@ class MainWindow(QMainWindow):
         content.setContentsMargins(32, 25, 32, 16)
         content.setSpacing(18)
         top = QHBoxLayout()
-        top.addWidget(label("WORKSPACE  /  创作守护", "eyebrow"))
+        self.breadcrumb = label("WORKSPACE  /  首页", "eyebrow")
+        top.addWidget(self.breadcrumb)
         top.addStretch()
         top.addWidget(label(backend.label, "muted"))
-        self.mode_badge = label("●  观察模式", "badge")
+        self.mode_badge = button("●  观察模式", lambda: self.navigate("protection"))
+        self.mode_badge.setToolTip("打开创作保护，查看状态或暂停")
         top.addWidget(self.mode_badge)
         content.addLayout(top)
+        self.protection_tabs = QWidget()
+        tabs = QHBoxLayout(self.protection_tabs)
+        tabs.setContentsMargins(0, 0, 0, 0)
+        self.protection_nav = []
+        for index, title in enumerate(("保护状态", "应用规则", "活动记录")):
+            action = button(title, lambda checked=False, i=index: self.switch_page(i))
+            action.setCheckable(True)
+            self.protection_nav.append(action)
+            tabs.addWidget(action)
+        tabs.addStretch()
+        content.addWidget(self.protection_tabs)
         self.pages = QStackedWidget()
         content.addWidget(self.pages, 1)
         root.addLayout(content, 1)
@@ -330,26 +355,31 @@ class MainWindow(QMainWindow):
         self.build_profiles()
         self.build_events()
         self.build_preferences()
-        self.palette_page = PalettePage(store.root / "palettes.json")
-        self.pages.addWidget(self.palette_page)
-        self.pages.addWidget(CalculatorPage())
-        self.font_page = FontPage(store.root / "fonts.json")
-        self.pages.addWidget(self.font_page)
+        self.entry_pages = {}
+        for kind in ("home", "library", "tools"):
+            page = WorkspacePage(kind, self.workspace, self.protection_reason)
+            page.open_requested.connect(self.open_tool)
+            page.favorite_requested.connect(self.toggle_tool_favorite)
+            page.directory_requested.connect(lambda: self.navigate("tools"))
+            self.pages.addWidget(page)
+            self.entry_pages[kind] = page
         bottom = QHBoxLayout()
-        self.footer = label("自动保存日志不记录按键内容；工具资料保存在本机。", "muted")
-        bottom.addWidget(self.footer)
-        bottom.addStretch()
+        self.footer = label("自动保存日志不记录按键内容；工具资料保存在本机。", "muted", True)
+        bottom.addWidget(self.footer, 1)
         content.addLayout(bottom)
         self.make_tray()
-        self.switch_page(0)
+        self.navigate("home")
         self.refresh_profiles()
         self.timer = QTimer(self)
         self.timer.setInterval(500)
         self.timer.timeout.connect(self.tick)
-        if start_timer:
+        if start_timer and self.protection_available:
             self.timer.start()
+        self.update_mode()
         self.tick()
         self.on_event(Event("system", "工具箱", "已启动观察模式；自动保存需本次手动开启"))
+        if not self.protection_available:
+            self.on_event(Event("error", "系统适配", self.protection_reason))
         if store.warning:
             self.on_event(Event("error", "配置", store.warning))
 
@@ -360,7 +390,10 @@ class MainWindow(QMainWindow):
         layout.setSpacing(16)
         layout.addWidget(label(title, "title"))
         layout.addWidget(label(subtitle, "muted", True))
-        self.pages.addWidget(page)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(page)
+        self.pages.addWidget(scroll)
         return layout
 
     def build_dashboard(self):
@@ -382,7 +415,8 @@ class MainWindow(QMainWindow):
         row.addWidget(self.arm_button)
         row.addWidget(self.pause_button)
         row.addStretch()
-        row.addWidget(button("重新开始", self.restart))
+        self.restart_button = button("重新开始", self.restart)
+        row.addWidget(self.restart_button)
         hero_layout.addLayout(row)
         layout.addWidget(hero)
         metrics = QHBoxLayout()
@@ -510,7 +544,7 @@ class MainWindow(QMainWindow):
         self.tray.setToolTip("创作工具箱 · 观察模式")
         menu = QMenu(self)
         menu.addAction("打开工具箱", self.show_main)
-        menu.addAction("悬浮色卡", self.palette_page.open_floating)
+        menu.addAction("悬浮色卡", self.open_floating_palette)
         self.tray_pause = menu.addAction("暂停保护", self.toggle_pause)
         menu.addAction("切回观察模式", self.disarm)
         menu.addSeparator()
@@ -520,10 +554,103 @@ class MainWindow(QMainWindow):
         if QSystemTrayIcon.isSystemTrayAvailable():
             self.tray.show()
 
+    def mark_route(self, route, title):
+        for key, nav in self.nav.items():
+            nav.setChecked(key == route)
+        self.protection_tabs.setVisible(route == "protection")
+        self.breadcrumb.setText("WORKSPACE  /  " + title)
+
+    def navigate(self, route):
+        if route == "protection":
+            self.open_tool("protection")
+        elif route == "settings":
+            self.switch_page(3)
+        elif route in self.entry_pages:
+            self.entry_pages[route].refresh()
+            self.pages.setCurrentWidget(self.entry_pages[route])
+            self.mark_route(route, {"home": "首页", "library": "资源库", "tools": "工具"}[route])
+
+    def ensure_tool(self, tool_id):
+        if tool_id == "protection":
+            return self.pages.widget(0)
+        if tool_id not in self.tool_pages:
+            page = TOOL_BY_ID[tool_id].factory(self.store.root)
+            self.pages.addWidget(page)
+            self.tool_pages[tool_id] = page
+        return self.tool_pages[tool_id]
+
+    @property
+    def palette_page(self):
+        return self.ensure_tool("palettes")
+
+    @property
+    def font_page(self):
+        return self.ensure_tool("fonts")
+
+    def open_tool(self, tool_id):
+        if tool_id not in TOOL_BY_ID:
+            return
+        try:
+            page = self.ensure_tool(tool_id)
+        except Exception as exc:
+            QMessageBox.warning(self, "工具暂未打开",
+                                f"{TOOL_BY_ID[tool_id].name}加载失败（{type(exc).__name__}）。可重试或先使用其他工具。")
+            return
+        self.pages.setCurrentWidget(page)
+        tool = TOOL_BY_ID[tool_id]
+        self.mark_route(tool.area, tool.name)
+        if tool_id == "protection":
+            self.select_protection_tab(0)
+        self.remember_tool(tool_id)
+
+    def refresh_entries(self):
+        for page in self.entry_pages.values():
+            page.refresh()
+        if self.workspace.warning:
+            self.footer.setText(self.workspace.warning)
+            self._workspace_footer = self.workspace.warning
+        elif self.footer.text() == getattr(self, "_workspace_footer", None):
+            self.footer.setText("自动保存日志不记录按键内容；工具资料保存在本机。")
+            self._workspace_footer = None
+
+    def remember_tool(self, tool_id):
+        if not self.workspace.read_only:
+            try:
+                self.workspace.record_open(tool_id)
+                self.workspace.warning = ""
+            except (OSError, ValueError) as exc:
+                self.workspace.warning = f"最近使用未保存：{exc}。工具仍可使用。"
+        self.refresh_entries()
+
+    def toggle_tool_favorite(self, tool_id):
+        try:
+            self.workspace.toggle_favorite(tool_id)
+            self.workspace.warning = ""
+        except (OSError, ValueError) as exc:
+            self.workspace.warning = f"收藏未保存：{exc}"
+        self.refresh_entries()
+
+    def open_floating_palette(self):
+        try:
+            self.palette_page.open_floating()
+        except Exception as exc:
+            QMessageBox.warning(self, "悬浮色卡暂未打开", f"加载失败：{type(exc).__name__}。请稍后重试。")
+            return
+        self.remember_tool("palettes")
+
+    def select_protection_tab(self, index):
+        for i, action in enumerate(self.protection_nav):
+            action.setChecked(i == index)
+
     def switch_page(self, index):
-        self.pages.setCurrentIndex(index)
-        for i, nav in enumerate(self.nav):
-            nav.setChecked(i == index)
+        # Preserve the previous internal route API for capture tools and integrations.
+        if index in (4, 5, 6):
+            self.open_tool({4: "palettes", 5: "calculators", 6: "fonts"}[index])
+        elif index in (0, 1, 2, 3):
+            self.pages.setCurrentIndex(index)
+            self.mark_route("settings" if index == 3 else "protection",
+                            ("保护状态", "应用规则", "活动记录", "设置")[index])
+            self.select_protection_tab(index)
 
     def show_main(self):
         self.showNormal()
@@ -542,7 +669,12 @@ class MainWindow(QMainWindow):
     def quit_app(self):
         self.quitting = True
         self.timer.stop()
-        self.palette_page.close_floating()
+        if "palettes" in self.tool_pages:
+            self.tool_pages["palettes"].close_floating()
+        if "fonts" in self.tool_pages:
+            self.tool_pages["fonts"].flush_preferences()
+        if getattr(self, "capture_timer", None) is not None:
+            self.capture_timer.stop()
         self.tray.hide()
         QApplication.instance().quit()
 
@@ -552,6 +684,8 @@ class MainWindow(QMainWindow):
         self.update_mode()
 
     def toggle_automatic(self):
+        if not self.protection_available:
+            return
         if self.controller.automatic:
             self.disarm()
             self.on_event(Event("system", "工具箱", "已切回观察模式"))
@@ -572,16 +706,28 @@ class MainWindow(QMainWindow):
         self.on_event(Event("system", "工具箱", "已开启本次自动保存；所有间隔重新计时"))
 
     def toggle_pause(self):
+        if not self.protection_available:
+            return
         self.controller.paused = not self.controller.paused
         self.controller.restart()
         self.update_mode()
         self.on_event(Event("system", "工具箱", "保护已暂停" if self.controller.paused else "已恢复，间隔重新计时"))
 
     def restart(self):
+        if not self.protection_available:
+            return
         self.controller.restart()
         self.on_event(Event("system", "工具箱", "已清除本次失败状态并重新计时"))
 
     def update_mode(self):
+        for control in (self.arm_button, self.pause_button, self.restart_button, self.capture_button, self.tray_pause):
+            control.setEnabled(self.protection_available)
+        if not self.protection_available:
+            self.mode_badge.setText("●  保护不可用 · 查看原因")
+            self.hero_title.setText("其他工具仍可正常使用")
+            self.hero_description.setText(self.protection_reason)
+            self.tray.setToolTip("创作工具箱 · 创作保护暂不可用")
+            return
         auto, paused = self.controller.automatic, self.controller.paused
         self.mode_badge.setText("●  已暂停" if paused else ("●  自动模式" if auto else "●  观察模式"))
         self.hero_title.setText("给创作留一点呼吸" if auto else "先观察，再开启保护")
@@ -710,6 +856,8 @@ class MainWindow(QMainWindow):
         self.profile_count.setText(f"{sum(p.enabled for p in self.settings.profiles)} 个应用已启用")
 
     def begin_capture(self):
+        if not self.protection_available:
+            return
         self.capture_seconds = 5
         self.capture_button.setEnabled(False)
         self.capture_button.setText("请切换到目标应用 · 5 秒")
@@ -725,6 +873,7 @@ class MainWindow(QMainWindow):
             return
         self.capture_timer.stop()
         self.capture_timer.deleteLater()
+        self.capture_timer = None
         self.capture_button.setEnabled(True)
         self.capture_button.setText("从前台应用添加")
         try:
