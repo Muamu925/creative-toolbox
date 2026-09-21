@@ -28,7 +28,7 @@ class WorkspacePage(QWidget):
         root.setSpacing(14)
         heading, subtitle = {
             "home": ("今天，从这里开始。", "常用工具与最近使用，随时接着做。"),
-            "library": ("你的创作资料。", "管理已有的字体与色板；各工具中的整理结果会保存在本机。"),
+            "library": ("你的创作资料。", "收集参考图片，整理字体与色板；资料保存在本机。"),
             "tools": ("找到眼前需要的工具。", "直接开始一个小任务，无需先创建项目。"),
         }[kind]
         root.addWidget(text(heading, "title"))
@@ -36,6 +36,7 @@ class WorkspacePage(QWidget):
         self.notice = text("", "muted")
         root.addWidget(self.notice)
         if kind == "tools":
+            root.addWidget(text("搜索工具", "section"))
             self.search = QLineEdit()
             self.search.setAccessibleName("搜索工具")
             self.search.setClearButtonEnabled(True)
@@ -43,6 +44,10 @@ class WorkspacePage(QWidget):
             self.search.textChanged.connect(self.refresh)
             root.addWidget(self.search)
         elif kind == "home":
+            collect = QPushButton("收集参考图片")
+            collect.setObjectName("primary")
+            collect.clicked.connect(lambda: self.open_requested.emit("assets"))
+            root.addWidget(collect, 0, Qt.AlignmentFlag.AlignLeft)
             action = QPushButton("浏览全部工具 →")
             action.clicked.connect(self.directory_requested.emit)
             root.addWidget(action, 0, Qt.AlignmentFlag.AlignLeft)
@@ -72,12 +77,14 @@ class WorkspacePage(QWidget):
         row.addLayout(copy, 1)
         star = QPushButton("已收藏" if tool.id in self.store.data["favorites"] else "收藏")
         star.setCheckable(True)
+        star.setObjectName("secondary")
         star.setChecked(tool.id in self.store.data["favorites"])
         star.setAccessibleName(("取消收藏" if star.isChecked() else "收藏") + tool.name)
         star.setEnabled(not self.store.read_only)
         star.clicked.connect(lambda checked=False, key=tool.id: self.favorite_requested.emit(key))
         row.addWidget(star)
         action = QPushButton("打开")
+        action.setObjectName("primary")
         action.setAccessibleName("打开" + tool.name)
         action.clicked.connect(lambda checked=False, key=tool.id: self.open_requested.emit(key))
         row.addWidget(action)

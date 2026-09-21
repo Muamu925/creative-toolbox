@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def copy_distribution_docs(output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
-    for name in ("README.md", "README.en.md", "CONTRIBUTING.md", "LICENSE"):
+    for name in ("README.md", "README.en.md", "CONTRIBUTING.md", "DESIGN.md", "LICENSE"):
         shutil.copy2(ROOT / name, output / name)
     shutil.copytree(ROOT / "docs", output / "docs", dirs_exist_ok=True)
     shutil.copytree(ROOT / "assets" / "demo", output / "assets" / "demo", dirs_exist_ok=True)

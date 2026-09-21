@@ -37,7 +37,7 @@ QWidget#sidebar QPushButton:checked { color: #fff; background: #365147; }
 QWidget#sidebar QPushButton:hover { background: #2a4439; }
 QLabel#title { font-size: 29px; font-weight: 700; color: #203c31; }
 QLabel#eyebrow { color: #628170; font-size: 11px; font-weight: 600; }
-QLabel#muted { color: #718077; }
+QLabel#muted { color: #596b61; }
 QLabel#section { font-size: 16px; font-weight: 700; }
 QFrame#card { background: #ffffff; border: 1px solid #e0e7df; border-radius: 14px; }
 QFrame#hero { background: #e6eee4; border: 1px solid #d7e3d4; border-radius: 16px; }
@@ -49,14 +49,20 @@ QPushButton { background: #ffffff; color: #2c4a3b; border: 1px solid #d7e0d5;
 QPushButton:hover { background: #edf2e9; border-color: #aabfa7; }
 QPushButton:pressed { background: #dfe9d9; }
 QPushButton:checked { background: #e2eddf; border-color: #88a584; }
+QPushButton:focus { border: 2px solid #355e46; padding: 8px 13px; }
+QWidget#sidebar QPushButton:focus { border: 2px solid #b3cf9c; padding: 11px 16px; }
+QPushButton#secondary { background: transparent; border-color: transparent; font-weight: 400; }
+QPushButton#secondary:hover { background: #e2eddf; border-color: #aabfa7; }
+QPushButton#secondary:focus { border-color: #355e46; }
 QPushButton:disabled { color: #9ca79e; background: #f1f3ef; border-color: #e4e9e1; }
-QPushButton#primary { background: #355e46; color: white; border: none; }
+QPushButton#primary { background: #355e46; color: white; border: 1px solid #355e46; }
+QPushButton#primary:focus { border: 2px solid #172d23; }
 QPushButton#primary:hover { background: #447755; }
 QPushButton#primary:disabled { background: #e4e9e1; color: #8c998f; }
 QPushButton#danger { color: #9a5442; }
 QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QPlainTextEdit { background: white; border: 1px solid #d5dfd1;
     border-radius: 6px; padding: 8px; min-height: 19px; selection-background-color: #426e50; }
-QLineEdit:focus, QSpinBox:focus, QComboBox:focus { border: 1px solid #558963; }
+QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QPlainTextEdit:focus { border: 2px solid #355e46; padding: 7px; }
 QComboBox QAbstractItemView { background: white; selection-background-color: #e2eddf;
     selection-color: #233a34; padding: 4px; }
 QCheckBox { spacing: 8px; }
@@ -662,13 +668,21 @@ class MainWindow(QMainWindow):
             self.hide()
             event.ignore()
         else:
-            event.accept()
             if not self.quitting:
                 self.quit_app()
+            if self.quitting:
+                event.accept()
+            else:
+                event.ignore()
 
     def quit_app(self):
+        assets = self.tool_pages.get("assets")
+        if not self.quitting and assets and not assets.can_exit():
+            return
         self.quitting = True
         self.timer.stop()
+        if assets:
+            assets.shutdown()
         if "palettes" in self.tool_pages:
             self.tool_pages["palettes"].close_floating()
         if "fonts" in self.tool_pages:

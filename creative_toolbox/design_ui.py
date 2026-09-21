@@ -10,7 +10,7 @@ from PySide6.QtGui import QColor, QColorSpace, QFont, QImageReader
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QFileDialog, QFontComboBox, QFrame, QGridLayout, QHBoxLayout, QInputDialog,
-    QLabel, QLineEdit, QMessageBox, QPlainTextEdit, QPushButton, QScrollArea,
+    QLabel, QLineEdit, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QScrollArea,
     QSpinBox, QTabWidget, QVBoxLayout, QWidget,
 )
 
@@ -101,25 +101,31 @@ class PalettePage(QWidget):
         self.tabs.addTab(library, '我的配色卡')
         row = QHBoxLayout()
         self.palettes = QComboBox()
+        self.palettes.setAccessibleName('当前色板')
         row.addWidget(self.palettes, 1)
         row.addWidget(action('新建', self.new_palette))
         row.addWidget(action('重命名', self.rename_palette))
         row.addWidget(action('删除色板', self.remove_palette))
         self.format = QComboBox()
+        self.format.setAccessibleName('颜色复制格式')
+        self.format.setToolTip('点击色块时使用的复制格式')
         self.format.addItems(COPY_FORMATS)
         self.format.setMaximumWidth(165)
         row.addWidget(self.format)
         layout.addLayout(row)
-        bar = QHBoxLayout()
-        for title, callback in [('导入 JSON', self.import_library), ('导出 JSON', self.export_library),
-                                ('复制 CSS', self.copy_css), ('图片提色', self.extract_image)]:
-            bar.addWidget(action(title, callback))
-        bar.addStretch()
-        layout.addLayout(bar)
         tools = QHBoxLayout()
-        tools.addWidget(action('悬浮色卡', self.open_floating))
-        tools.addWidget(action('导出 PNG', self.export_png))
+        floating_action = action('悬浮色卡', self.open_floating)
+        floating_action.setObjectName('primary')
+        tools.addWidget(floating_action)
+        tools.addWidget(action('图片提色', self.extract_image))
         tools.addWidget(action('复制整板', self.copy_palette))
+        transfer = QPushButton('导入 / 导出')
+        menu = QMenu(transfer)
+        for title, callback in [('导入 JSON', self.import_library), ('导出 JSON', self.export_library),
+                                ('导出 PNG', self.export_png), ('复制 CSS', self.copy_css)]:
+            menu.addAction(title, callback)
+        transfer.setMenu(menu)
+        tools.addWidget(transfer)
         self.undo_button = action('撤销', self.model.undo)
         self.undo_button.setToolTip('撤销本次运行中最近 20 次色板修改')
         tools.addWidget(self.undo_button)
@@ -136,16 +142,25 @@ class PalettePage(QWidget):
         area.setWidget(self.cards)
         layout.addWidget(area, 1)
         self.name = QLineEdit()
+        self.name.setAccessibleName('颜色名称（可选）')
         self.name.setPlaceholderText('颜色名称，例如：品牌主色')
         self.code = QLineEdit('#355E46')
+        self.code.setAccessibleName('HEX 色号')
         self.code.setMaximumWidth(150)
-        editor = QHBoxLayout()
-        editor.addWidget(self.name, 1)
-        editor.addWidget(self.code)
-        editor.addWidget(action('选色', self.choose_color))
+        editor = QGridLayout()
+        name_label, code_label = text('颜色名称（可选）'), text('HEX 色号')
+        name_label.setBuddy(self.name)
+        code_label.setBuddy(self.code)
+        editor.addWidget(name_label, 0, 0)
+        editor.addWidget(code_label, 0, 1)
+        editor.addWidget(self.name, 1, 0)
+        editor.addWidget(self.code, 1, 1)
+        editor.addWidget(action('选色', self.choose_color), 1, 2)
+        editor.setColumnStretch(0, 1)
         self.save_button = action('添加颜色', self.save_color)
-        editor.addWidget(self.save_button)
-        editor.addWidget(action('取消编辑', self.cancel_edit))
+        editor.addWidget(self.save_button, 1, 3)
+        self.cancel_button = action('取消编辑', self.cancel_edit)
+        editor.addWidget(self.cancel_button, 1, 4)
         layout.addLayout(editor)
         row = QHBoxLayout()
         self.harmony_mode = QComboBox()
@@ -206,18 +221,20 @@ class PalettePage(QWidget):
         for position, (i, color) in enumerate(displayed):
             card = QFrame()
             card.setObjectName('card')
-            card.setMinimumHeight(230)
+            card.setMinimumHeight(204)
             col = QVBoxLayout(card)
+            col.setSpacing(8)
             value = format_color(color['hex'], self.format.currentText())
             swatch = action(value, lambda checked=False, v=value: self.copy_color(v))
             ink = '#FFFFFF' if contrast_ratio(color['hex'], '#FFFFFF') >= contrast_ratio(color['hex'], '#000000') else '#000000'
             swatch.setStyleSheet(f'background:{color["hex"]}; color:{ink}; border:none; border-radius:8px;')
-            swatch.setMinimumHeight(86)
+            swatch.setMinimumHeight(64)
             swatch.setAccessibleName(f'{color["name"]}，复制 {value}')
             col.addWidget(swatch)
             full_name = color['name'] or '未命名颜色'
             name_label = text(full_name)
             name_label.setWordWrap(False)
+            name_label.setMinimumHeight(name_label.fontMetrics().height())
             name_label.setText(name_label.fontMetrics().elidedText(full_name, Qt.TextElideMode.ElideRight, 190))
             name_label.setToolTip(full_name)
             col.addWidget(name_label)
@@ -288,6 +305,7 @@ class PalettePage(QWidget):
         self.edit_index = None
         self.name.clear()
         self.save_button.setText('添加颜色')
+        self.cancel_button.setEnabled(False)
 
     def edit_color(self, index):
         self.edit_index = index
@@ -295,6 +313,9 @@ class PalettePage(QWidget):
         self.name.setText(color['name'])
         self.code.setText(color['hex'])
         self.save_button.setText('保存修改')
+        self.cancel_button.setEnabled(True)
+        self.name.setFocus()
+        self.name.selectAll()
 
     def save_color(self):
         try:
@@ -398,6 +419,8 @@ class PalettePage(QWidget):
         layout.addWidget(text('检查文字与背景的可读性', 'section'))
         row = QHBoxLayout()
         self.foreground, self.background = QLineEdit('#355E46'), QLineEdit('#FFFFFF')
+        self.foreground.setAccessibleName('文字 HEX 色号')
+        self.background.setAccessibleName('背景 HEX 色号')
         row.addWidget(text('文字 HEX'))
         row.addWidget(self.foreground)
         row.addWidget(text('背景 HEX'))
@@ -497,6 +520,10 @@ class CalculatorPage(QWidget):
 
     def update_print(self):
         width, height, ppi = self.print_width.value(), self.print_height.value(), self.ppi.value()
+        unit = ' mm' if self.print_direction.currentIndex() == 0 else ' px'
+        for field, title in ((self.print_width, '宽度'), (self.print_height, '高度')):
+            field.setSuffix(unit)
+            field.setAccessibleName(title + unit)
         if self.print_direction.currentIndex() == 0:
             result = f'{print_pixels(width, ppi)} × {print_pixels(height, ppi)} px'
         else:

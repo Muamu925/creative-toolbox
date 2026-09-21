@@ -4,21 +4,22 @@
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.4.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. Reference boards, project management, batch delivery, and media processing are planned, not implemented.
+**Version 0.5.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image inbox adds collection, tags, source notes, search, a floating reference, trash and backup/restore. Multi-image boards, project management, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.4.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.4.0/CreativeToolbox-0.4.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.4.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.5.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.5.0/CreativeToolbox-0.5.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.5.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
 ## Available today
 
 | Module | Implemented capabilities | When to use it |
 | --- | --- | --- |
-| **Home and tool access** | Search, favorites, recent tools, font/palette entry points and on-demand pages | Find a utility and continue working |
+| **Home and tool access** | Search, favorites, recent tools, image/font/palette entry points and on-demand pages | Find a utility and continue working |
+| **Image library** | PNG / JPEG import, drop and explicit paste; inbox, tags, source notes, search, floating reference, trash and backup/restore | Collect references and find them again |
 | **Creative safeguards** | Per-app save shortcuts, idle thresholds and intervals; observation, reminder and automatic modes | Assist saving during idle moments; every launch starts in observation mode |
 | **Fonts and text** | Search installed fonts; groups, tags, favorites, notes and backup; custom samples and 2–4 font comparisons with available styles | Organize project candidates and compare typography |
 | **Size and rhythm calculators** | Millimeters / pixels / PPI, proportional scaling, BPM-to-note durations including dotted and triplet values | Calculate output dimensions, proportions or delay settings |
 | **Color and contrast** | Custom palettes, floating swatches, image colors, text contrast, JSON / CSS / PNG export | Reuse colors, check text/background combinations and share swatches |
 
-Tools work independently, without creating a project or enabling automatic saving. No account is required. Palettes, app rules and activity metadata stay on your computer; image color extraction does not upload images. The interface is currently primarily Chinese.
+Tools work independently, without creating a project or enabling automatic saving. No account is required. Images, font metadata, palettes, app rules and activity metadata stay on your computer; image color extraction does not upload images. The interface is currently primarily Chinese.
 
 ## Try it in two minutes
 
@@ -28,9 +29,9 @@ Tools work independently, without creating a project or enabling automatic savin
 
 The main window can close to the system tray when available. Reopen or quit from the tray menu.
 
-![Version 0.4.0 home and favorite tools](assets/demo/workspace-home.png)
+![Image library: search, metadata and preview](assets/demo/asset-inbox.png)
 
-See the [workspace guide (Chinese)](docs/WORKSPACE.md). The resource entry currently opens fonts and palettes; image collection is not implemented. The font and color screenshots below are from earlier versions; those capabilities remain available.
+See the [workspace guide (Chinese)](docs/WORKSPACE.md). Open the image library from Home or Resources; import/drop PNG or JPEG files or explicitly paste an image. Managed copies remain available if the source moves. See the [image library guide (Chinese)](docs/ASSET_LIBRARY.md). The font and color screenshots below are from earlier versions; those capabilities remain available.
 
 <details>
 <summary>Font workspace example: groups, tags and comparison</summary>
@@ -65,13 +66,13 @@ These are planned capabilities, not features in the current downloads. Prioritie
 | Direction | Proposed additions |
 | --- | --- |
 | **Further access improvements** | Design / video / music filters and configurable quick access |
-| **Personal resource library** | Image inbox, collections, tags, source records and floating references; connections to palettes and font metadata |
+| **Personal resource library** | Collections, linked color extraction and cross-resource search; connections to palettes and font metadata |
 | **Projects and delivery** | Specification cards, resource references, project copies and image output; reference boards and batch naming follow later |
 | **Video and motion** | Media information, timecode/frame calculations and frame extraction, followed by conversion |
 | **Music and audio** | Tap Tempo, bar duration, pitch/frequency conversion and audio specification checks |
 | **Text and productivity** | Uninstalled font folders, smart groups, glyph coverage checks, text cleanup and reusable snippets |
 
-The first access-and-foundations stage is implemented. Next: **build a personal resource library → combine resources into projects and deliverables**. Tools remain usable independently. See the [architecture and development plan](docs/ARCHITECTURE_PLAN.md) for implementation order and acceptance criteria, and the [feature map](docs/FEATURE_ROADMAP.md) for candidate capabilities, currently in Chinese.
+The first access-and-foundations stage and the initial image inbox are implemented. Next: **build a personal resource library → combine resources into projects and deliverables**. Tools remain usable independently. See the [architecture and development plan](docs/ARCHITECTURE_PLAN.md) for implementation order and acceptance criteria, and the [feature map](docs/FEATURE_ROADMAP.md) for candidate capabilities, currently in Chinese.
 
 ## Platform status
 
@@ -97,7 +98,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 81 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation and graceful degradation. Tests do not replace validation in real creative applications.
+There are 106 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, trash, backup validation and independent restore. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
