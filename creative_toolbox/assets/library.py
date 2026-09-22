@@ -21,6 +21,8 @@ MAX_PIXELS = 40_000_000
 MAX_ITEMS = 10_000
 MAX_BATCH = 100
 MAX_LIBRARY_BYTES = 5 * 1024**3
+MAX_DATABASE_BYTES = 512 * 1024**2
+MAX_COLLECTIONS = 200
 
 
 def now():
@@ -69,7 +71,7 @@ class AssetStore:
         try:
             version = self.db.execute("PRAGMA user_version").fetchone()[0]
             tables = self.db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-            if version not in (0, 1) or (version == 0 and tables):
+            if version not in (0, 1, 2) or (version == 0 and tables):
                 raise ValueError("不支持的素材库版本；原文件已保留")
             self.db.execute("PRAGMA foreign_keys=ON")
             if version == 0:
@@ -99,6 +101,32 @@ class AssetStore:
             self.library_id = self.db.execute("SELECT value FROM meta WHERE key='library_id'").fetchone()[0]
             if not re.fullmatch(r"[0-9a-f]{32}", self.library_id):
                 raise ValueError("素材库标识无效")
+            if version in (0, 1):
+                # Preserve the prior schema before the first in-place migration.
+                backup = self.root / "before-collections.sqlite3"
+                if version == 1 and not backup.exists():
+                    fd, staged_backup = tempfile.mkstemp(dir=self.root, suffix=".sqlite3.tmp")
+                    os.close(fd)
+                    try:
+                        previous = sqlite3.connect(staged_backup)
+                        try:
+                            self.db.backup(previous)
+                        finally:
+                            previous.close()
+                        os.replace(staged_backup, backup)
+                    finally:
+                        Path(staged_backup).unlink(missing_ok=True)
+                self.db.executescript("""
+                    BEGIN;
+                    CREATE TABLE collections (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+                        name_key TEXT NOT NULL UNIQUE);
+                    CREATE TABLE collection_assets (
+                        collection_id TEXT NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+                        asset_id TEXT NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+                        PRIMARY KEY(collection_id, asset_id));
+                    PRAGMA user_version=2;
+                    COMMIT;
+                """)
             (self.root / "originals").mkdir(exist_ok=True)
             (self.root / "previews").mkdir(exist_ok=True)
             (self.root / "staging").mkdir(exist_ok=True)
@@ -132,13 +160,16 @@ class AssetStore:
         asset = self.get(asset_id)
         return self.blob_path(asset["hash"], "png" if preview else asset["ext"], preview)
 
-    def list_assets(self, query="", scope="all", offset=0, limit=100):
+    def list_assets(self, query="", scope="all", offset=0, limit=100, collection=None):
         if scope not in ("all", "inbox", "trash"):
             raise ValueError("未知筛选")
         where, params = ["a.deleted=?"], [int(scope == "trash")]
         if scope == "inbox":
             where.append("a.reviewed=0")
-        # instr matches literal text; '%' and '_' are not wildcard expressions.
+        if collection:
+            where.append("EXISTS (SELECT 1 FROM collection_assets c WHERE c.asset_id=a.id AND c.collection_id=?)")
+            params.append(collection)
+        # '%' and '_' in the query are literal text, not wildcard expressions.
         # Python casefold provides consistent CJK/Unicode matching across platforms.
         rows = self.db.execute("""SELECT a.*, b.ext, b.width, b.height, b.size
             FROM assets a JOIN blobs b ON a.hash=b.hash WHERE """ + " AND ".join(where)
@@ -241,6 +272,53 @@ class AssetStore:
                                    (int(bool(deleted)), asset_id)).rowcount:
                 raise ValueError("素材已不存在")
 
+    def collections(self):
+        return [dict(row) for row in self.db.execute("""
+            SELECT c.id,c.name,COUNT(a.id) AS count FROM collections c
+            LEFT JOIN collection_assets ca ON ca.collection_id=c.id
+            LEFT JOIN assets a ON a.id=ca.asset_id AND a.deleted=0
+            GROUP BY c.id ORDER BY c.name_key,c.id""")]
+
+    def asset_collections(self, asset_id):
+        return [row[0] for row in self.db.execute(
+            "SELECT collection_id FROM collection_assets WHERE asset_id=?", (asset_id,))]
+
+    def save_collection(self, name, collection_id=None):
+        name = name.strip()
+        if not 0 < len(name) <= 80:
+            raise ValueError("集合名称须为 1–80 字")
+        if collection_id is None and len(self.collections()) >= MAX_COLLECTIONS:
+            raise ValueError("最多创建 200 个集合")
+        identifier = collection_id or uuid.uuid4().hex
+        try:
+            with self.db:
+                if collection_id:
+                    if not self.db.execute("UPDATE collections SET name=?,name_key=? WHERE id=?",
+                                           (name, name.casefold(), identifier)).rowcount:
+                        raise ValueError("集合已不存在")
+                else:
+                    self.db.execute("INSERT INTO collections VALUES (?,?,?)",
+                                    (identifier, name, name.casefold()))
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("已有同名集合，请换一个名称") from exc
+        return identifier
+
+    def delete_collection(self, collection_id):
+        # Deletes membership only, never the assets or their original files.
+        with self.db:
+            self.db.execute("DELETE FROM collections WHERE id=?", (collection_id,))
+
+    def set_collections(self, asset_id, collection_ids):
+        self.get(asset_id)
+        ids = list(dict.fromkeys(collection_ids))
+        known = {c["id"] for c in self.collections()}
+        if any(identifier not in known for identifier in ids):
+            raise ValueError("集合已不存在，请重新选择")
+        with self.db:
+            self.db.execute("DELETE FROM collection_assets WHERE asset_id=?", (asset_id,))
+            self.db.executemany("INSERT INTO collection_assets VALUES (?,?)",
+                                [(identifier, asset_id) for identifier in ids])
+
     def start_task(self, kind, total):
         task_id = uuid.uuid4().hex
         with self.db:
@@ -270,7 +348,11 @@ class AssetStore:
                 finally:
                     target.close()
                 blobs = list(self.db.execute("SELECT hash,ext,size FROM blobs"))
-                entries = [{"path": "library.sqlite3", "sha256": hashlib.sha256(snapshot.read_bytes()).hexdigest(),
+                if snapshot.stat().st_size > MAX_DATABASE_BYTES:
+                    raise ValueError("素材索引超过 512 MiB，无法生成可恢复备份；请保留原库")
+                with snapshot.open("rb") as stream:
+                    database_hash = hashlib.file_digest(stream, "sha256").hexdigest()
+                entries = [{"path": "library.sqlite3", "sha256": database_hash,
                             "size": snapshot.stat().st_size}]
                 with zipfile.ZipFile(stage, "w", compression=zipfile.ZIP_STORED) as archive:
                     archive.write(snapshot, "library.sqlite3")
@@ -328,10 +410,10 @@ class AssetStore:
                     name, size = entry["path"], entry["size"]
                     if name != "library.sqlite3" and not re.fullmatch(r"originals/[0-9a-f]{64}\.(png|jpg)", name):
                         raise ValueError("备份包含不允许的路径")
-                    if type(size) is not int or size < 0 or size > (64 * 1024**2 if name == "library.sqlite3" else MAX_FILE):
+                    if type(size) is not int or size < 0 or size > (MAX_DATABASE_BYTES if name == "library.sqlite3" else MAX_FILE):
                         raise ValueError("备份文件超限")
                     total_bytes += size
-                    if total_bytes > MAX_LIBRARY_BYTES + 64 * 1024**2 or archive.getinfo(name).file_size != size:
+                    if total_bytes > MAX_LIBRARY_BYTES + MAX_DATABASE_BYTES or archive.getinfo(name).file_size != size:
                         raise ValueError("备份大小无效")
                     path = root / name
                     path.parent.mkdir(parents=True, exist_ok=True)
@@ -349,7 +431,8 @@ class AssetStore:
                     progress(index + 1, len(files))
             probe = sqlite3.connect((root / "library.sqlite3").as_uri() + "?mode=ro", uri=True)
             try:
-                if probe.execute("PRAGMA user_version").fetchone()[0] != 1:
+                version = probe.execute("PRAGMA user_version").fetchone()[0]
+                if version not in (1, 2):
                     raise ValueError("不支持的素材库版本")
                 if probe.execute("PRAGMA quick_check").fetchone()[0] != "ok" or probe.execute("PRAGMA foreign_key_check").fetchall():
                     raise ValueError("备份数据库无效")
@@ -358,6 +441,17 @@ class AssetStore:
                     raise ValueError("备份库标识不匹配")
                 if probe.execute("SELECT count(*) FROM assets").fetchone()[0] > MAX_ITEMS:
                     raise ValueError("备份记录过多")
+                if version == 2:
+                    collections = probe.execute("SELECT id,name,name_key FROM collections").fetchall()
+                    if len(collections) > MAX_COLLECTIONS:
+                        raise ValueError("备份集合数量超限")
+                    keys = set()
+                    for identifier, name, key in collections:
+                        if (not isinstance(identifier, str) or not re.fullmatch(r"[0-9a-f]{32}", identifier)
+                                or not isinstance(name, str) or not 0 < len(name.strip()) <= 80
+                                or key != name.strip().casefold() or key in keys):
+                            raise ValueError("备份集合信息无效")
+                        keys.add(key)
                 blobnames = set()
                 for digest, ext, size, width, height in probe.execute("SELECT * FROM blobs"):
                     if not re.fullmatch(r"[0-9a-f]{64}", digest) or ext not in ("png", "jpg"):

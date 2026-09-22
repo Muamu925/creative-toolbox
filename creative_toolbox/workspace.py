@@ -42,8 +42,8 @@ class Tool:
 
 
 TOOLS = (
-    Tool("assets", "图片素材库", "收集参考图片，整理标签与来源，置顶查看。",
-         "素材 图片 参考 收集 标签 备份 image asset reference", "library", _assets),
+    Tool("assets", "图片素材库", "按集合整理参考图，关联配色，置顶查看。",
+         "素材 图片 参考 收集 集合 分组 标签 备份 提色 image asset reference collection", "library", _assets),
     Tool("fonts", "字体工作台", "用自己的文案选字，整理分组、标签与候选字体。",
          "字体 文字 字样 排版 对照 比较 分组 font typography", "library", _fonts),
     Tool("palettes", "配色工作台", "保存常用色板、从图片提色，悬浮复制颜色。",

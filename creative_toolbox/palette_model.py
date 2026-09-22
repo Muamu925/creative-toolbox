@@ -96,3 +96,16 @@ class PaletteModel(QObject):
 
     def copy_text(self, index):
         return format_color(self.palette['colors'][index]['hex'], self.copy_format)
+
+    def source_palettes(self, library_id, asset_id):
+        return [(index, palette["name"]) for index, palette in enumerate(self.library["palettes"])
+                if palette.get("source_asset", {}).get("library_id") == library_id
+                and palette.get("source_asset", {}).get("asset_id") == asset_id]
+
+    def add_from_asset(self, name, colors, source):
+        candidate = deepcopy(self.library)
+        candidate["schema"] = 2
+        candidate["palettes"].append({"name": name, "colors": [
+            {"name": f"主色 {index}", "hex": code} for index, code in enumerate(colors, 1)],
+            "source_asset": deepcopy(source)})
+        return self.commit(candidate, len(candidate["palettes"]) - 1)

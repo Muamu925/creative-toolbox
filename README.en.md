@@ -4,16 +4,17 @@
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.5.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image inbox adds collection, tags, source notes, search, a floating reference, trash and backup/restore. Multi-image boards, project management, batch delivery, and media processing remain planned.
+**Version 0.6.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.5.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.5.0/CreativeToolbox-0.5.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.5.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.6.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.6.0/CreativeToolbox-0.6.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.6.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
 ## Available today
 
 | Module | Implemented capabilities | When to use it |
 | --- | --- | --- |
 | **Home and tool access** | Search, favorites, recent tools, image/font/palette entry points and on-demand pages | Find a utility and continue working |
-| **Image library** | PNG / JPEG import, drop and explicit paste; inbox, tags, source notes, search, floating reference, trash and backup/restore | Collect references and find them again |
+| **Image library** | PNG / JPEG import, drop and explicit paste; inbox, multi-collection organization, tags, source notes, search, floating reference, trash, backup/restore and linked palettes | Collect references and find them again |
+| **Help center** | Getting started, feature guides, FAQ search, F1/contextual help and tool shortcuts | Find instructions without leaving the app |
 | **Creative safeguards** | Per-app save shortcuts, idle thresholds and intervals; observation, reminder and automatic modes | Assist saving during idle moments; every launch starts in observation mode |
 | **Fonts and text** | Search installed fonts; groups, tags, favorites, notes and backup; custom samples and 2–4 font comparisons with available styles | Organize project candidates and compare typography |
 | **Size and rhythm calculators** | Millimeters / pixels / PPI, proportional scaling, BPM-to-note durations including dotted and triplet values | Calculate output dimensions, proportions or delay settings |
@@ -26,6 +27,8 @@ Tools work independently, without creating a project or enabling automatic savin
 1. Download and fully extract the Windows ZIP. Open `CreativeToolbox/CreativeToolbox.exe`. Keep the entire folder together. Python is not required.
 2. Open a favorite from Home, or search in **工具** (Tools) for fonts, mm, BPM or colors. Favorite a tool to add it to Home.
 3. For idle-save assistance, configure the target app and shortcut in **创作保护 → 应用规则** (Creative safeguards → App rules). Check timing in **保护状态** (Protection status) observation mode, then test with disposable files.
+
+New users can open the Home guide or **帮助** (Help). Press **F1** or choose **本页帮助** for the current tool's guide. Help is available offline, currently in Chinese.
 
 The main window can close to the system tray when available. Reopen or quit from the tray menu.
 
@@ -66,7 +69,7 @@ These are planned capabilities, not features in the current downloads. Prioritie
 | Direction | Proposed additions |
 | --- | --- |
 | **Further access improvements** | Design / video / music filters and configurable quick access |
-| **Personal resource library** | Collections, linked color extraction and cross-resource search; connections to palettes and font metadata |
+| **Personal resource library** | Cross-resource search, unified backup and batch organization; further connections to fonts and projects |
 | **Projects and delivery** | Specification cards, resource references, project copies and image output; reference boards and batch naming follow later |
 | **Video and motion** | Media information, timecode/frame calculations and frame extraction, followed by conversion |
 | **Music and audio** | Tap Tempo, bar duration, pitch/frequency conversion and audio specification checks |
@@ -98,7 +101,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 106 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, trash, backup validation and independent restore. Tests do not replace validation in real creative applications.
+There are 122 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation and independent restore. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 

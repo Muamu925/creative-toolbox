@@ -8,13 +8,13 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QSize, QTimer
+from PySide6.QtCore import Qt, QSize, QTimer, Signal
 from PySide6.QtGui import QPixmap, QImageReader, QIcon
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QPlainTextEdit, QComboBox, QCheckBox, QSplitter, QListWidget,
     QListWidgetItem, QAbstractItemView, QFileDialog, QMessageBox, QFormLayout,
-    QProgressBar, QDialog, QScrollArea, QSizePolicy,
+    QProgressBar, QDialog, QScrollArea, QSizePolicy, QInputDialog, QMenu, QDialogButtonBox,
 )
 from .library import AssetStore, MAX_BATCH, MAX_PIXELS
 from .jobs import AssetJob
@@ -96,10 +96,14 @@ class ReferenceWindow(QDialog):
 
 
 class AssetPage(QWidget):
+    palette_requested = Signal()
     PAGE_SIZE = 60
 
     def __init__(self, data_root: Path):
         super().__init__()
+        self.palette_provider = None
+        self.local_palette_model = None
+        self.import_collection = None
         self.data_root = Path(data_root)
         self.location_file = self.data_root / "asset-location.json"
         root = self.data_root / "assets"
@@ -122,7 +126,7 @@ class AssetPage(QWidget):
         self.loading = False
         self.closed = False
         self.offset = 0
-        self.applied_filter = ("", "all")
+        self.applied_filter = ("", "all", None)
         self.exit_after_job = False
         self.setAcceptDrops(True)
         layout = QVBoxLayout(self)
@@ -152,6 +156,26 @@ class AssetPage(QWidget):
         self.scope.setAccessibleName("素材范围")
         filters.addWidget(self.scope)
         layout.addLayout(filters)
+        groups = QHBoxLayout()
+        groups.addWidget(label("集合"))
+        self.collection = QComboBox()
+        self.collection.setAccessibleName("筛选图片集合")
+        self.collection.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.collection.setMinimumContentsLength(10)
+        groups.addWidget(self.collection, 1)
+        self.manage_collections = QPushButton("管理集合")
+        self.manage_collections.setObjectName("secondary")
+        menu = QMenu(self.manage_collections)
+        menu.addAction("新建集合", lambda: self.edit_collection(False))
+        self.rename_collection_action = menu.addAction("重命名当前集合", lambda: self.edit_collection(True))
+        self.delete_collection_action = menu.addAction("移除当前集合", self.remove_collection)
+        menu.aboutToShow.connect(lambda: [
+            action.setEnabled(bool(self.collection.currentData()))
+            for action in (self.rename_collection_action, self.delete_collection_action)])
+        self.manage_collections.setMenu(menu)
+        groups.addWidget(self.manage_collections)
+        layout.addLayout(groups)
+        self.reload_collections()
         self.splitter = QSplitter()
         layout.addWidget(self.splitter, 1)
         left = QWidget()
@@ -181,8 +205,8 @@ class AssetPage(QWidget):
         self.preview = QLabel("选择图片查看预览")
         self.preview.setTextFormat(Qt.TextFormat.PlainText)
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumHeight(115)
-        self.preview.setMaximumHeight(190)
+        self.preview.setMinimumHeight(80)
+        self.preview.setMaximumHeight(120)
         self.preview.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         detail_box.addWidget(self.preview)
         self.dimensions = label("", "muted")
@@ -206,7 +230,7 @@ class AssetPage(QWidget):
         form.addRow("", self.reviewed)
         detail_box.addWidget(self.editor)
         actions = QHBoxLayout()
-        self.save_button = button("保存整理", self.save_details, True)
+        self.save_button = button("保存整理", self.save_and_refresh, True)
         self.reference_button = button("置顶查看", self.open_reference)
         self.remove_button = button("移到回收站", self.toggle_trash)
         for widget in (self.save_button, self.reference_button):
@@ -223,7 +247,18 @@ class AssetPage(QWidget):
         right_box.setContentsMargins(0, 0, 0, 0)
         right_box.addWidget(scroll, 1)
         right_box.addLayout(actions)
-        right_box.addWidget(self.remove_button)
+        more = QPushButton("更多操作")
+        more.setObjectName("secondary")
+        self.more_button = more
+        menu = QMenu(more)
+        self.membership_action = menu.addAction("加入 / 移出集合", self.organize_collections)
+        self.extract_action = menu.addAction("从图片创建色板", self.extract_palette)
+        self.linked_action = menu.addAction("打开关联色板", self.open_linked_palette)
+        more.setMenu(menu)
+        footer = QHBoxLayout()
+        footer.addWidget(more)
+        footer.addWidget(self.remove_button)
+        right_box.addLayout(footer)
         self.splitter.addWidget(right)
         self.splitter.setChildrenCollapsible(False)
         self.splitter.setSizes([370, 430])
@@ -251,6 +286,7 @@ class AssetPage(QWidget):
         self.search_timer.timeout.connect(self.filter_changed)
         self.search.textChanged.connect(lambda: self.search_timer.start())
         self.scope.currentIndexChanged.connect(self.filter_changed)
+        self.collection.currentIndexChanged.connect(self.filter_changed)
         self.list.currentItemChanged.connect(self.selection_changed)
         self.list.itemDoubleClicked.connect(lambda *_: self.open_reference())
         for field in (self.title, self.tags, self.source):
@@ -280,10 +316,10 @@ class AssetPage(QWidget):
         return True
 
     def refresh(self, selected=None):
-        rows, total = self.store.list_assets(self.search.text(), self.scope.currentData(), self.offset, self.PAGE_SIZE)
+        rows, total = self.store.list_assets(self.search.text(), self.scope.currentData(), self.offset, self.PAGE_SIZE, self.collection.currentData())
         if not rows and self.offset:
             self.offset = 0
-            rows, total = self.store.list_assets(self.search.text(), self.scope.currentData(), 0, self.PAGE_SIZE)
+            rows, total = self.store.list_assets(self.search.text(), self.scope.currentData(), 0, self.PAGE_SIZE, self.collection.currentData())
         wanted = selected or self.current_id
         self.list.blockSignals(True)
         self.list.clear()
@@ -304,7 +340,7 @@ class AssetPage(QWidget):
         self.empty.setVisible(total == 0)
         self.empty.setText("没有符合条件的素材。调整搜索或范围。" if self.search.text() else
                            ("回收站为空。" if self.scope.currentData() == "trash" else "还没有素材。拖入图片或点击「导入图片」。"))
-        self.applied_filter = (self.search.text(), self.scope.currentData())
+        self.applied_filter = (self.search.text(), self.scope.currentData(), self.collection.currentData())
         self.count.setText(f"{total} 张 · 本页 {len(rows)} 张" + (f" · 第 {self.offset // self.PAGE_SIZE + 1} 页" if total else ""))
         self.previous.setEnabled(self.offset > 0 and not self.worker)
         self.next.setEnabled(self.offset + self.PAGE_SIZE < total and not self.worker)
@@ -318,6 +354,7 @@ class AssetPage(QWidget):
         self.location.setText(f"本地素材库 · 原件 {counts['bytes'] / 1024**2:.1f} MiB · 待整理 {counts['inbox']} 张")
         self.location.setToolTip(str(self.store.root))
         self.save_button.setEnabled(bool(self.current_id and self.dirty and not self.worker))
+        self.more_button.setEnabled(bool(self.current_id and not self.worker))
         self.reference_button.setEnabled(bool(self.current_id))
         self.remove_button.setEnabled(bool(self.current_id and not self.worker))
 
@@ -327,10 +364,13 @@ class AssetPage(QWidget):
         if not self.confirm_details():
             self.search.blockSignals(True)
             self.scope.blockSignals(True)
+            self.collection.blockSignals(True)
             self.search.setText(self.applied_filter[0])
             self.scope.setCurrentIndex(self.scope.findData(self.applied_filter[1]))
             self.search.blockSignals(False)
             self.scope.blockSignals(False)
+            self.collection.setCurrentIndex(max(0, self.collection.findData(self.applied_filter[2])))
+            self.collection.blockSignals(False)
             return
         self.offset = 0
         self.refresh()
@@ -353,6 +393,7 @@ class AssetPage(QWidget):
         self.loading = True
         self.dirty = False
         self.editor.setEnabled(bool(asset_id) and not self.worker)
+        self.more_button.setEnabled(bool(asset_id) and not self.worker)
         self.reference_button.setEnabled(bool(asset_id))
         self.remove_button.setEnabled(bool(asset_id) and not self.worker)
         self.save_button.setEnabled(False)
@@ -379,7 +420,7 @@ class AssetPage(QWidget):
             self.dimensions.setText(f"{record['width']} × {record['height']} px · {record['ext'].upper()} · {record['size'] / 1024:.0f} KiB")
             try:
                 pixmap = load_preview(self.store.path_for(asset_id, True), 600)
-                self.preview.setPixmap(pixmap.scaled(QSize(max(240, self.preview.width()), 185),
+                self.preview.setPixmap(pixmap.scaled(QSize(max(240, self.preview.width()), 115),
                                                     Qt.AspectRatioMode.KeepAspectRatio,
                                                     Qt.TransformationMode.SmoothTransformation))
             except (OSError, ValueError) as exc:
@@ -432,6 +473,204 @@ class AssetPage(QWidget):
             self.reference.show()
         except Exception as exc:
             self.status.setText("无法打开参考：" + str(exc))
+
+    def save_and_refresh(self):
+        if self.save_details():
+            self.refresh()
+
+    def reload_collections(self, selected=None):
+        chosen = self.collection.currentData() if selected is None else selected
+        self.collection.blockSignals(True)
+        self.collection.clear()
+        self.collection.addItem("所有集合", None)
+        for record in self.store.collections():
+            self.collection.addItem(f"{record['name']} · {record['count']}", record["id"])
+        self.collection.setCurrentIndex(max(0, self.collection.findData(chosen)))
+        self.collection.blockSignals(False)
+
+    def edit_collection(self, rename=False):
+        if self.worker or not self.confirm_details():
+            return
+        identifier = self.collection.currentData() if rename else None
+        if rename and not identifier:
+            return
+        current = next((c["name"] for c in self.store.collections() if c["id"] == identifier), "")
+        name, accepted = QInputDialog.getText(self, "重命名集合" if rename else "新建集合",
+                                             "集合名称，例如：音乐节海报、片头参考", text=current)
+        if not accepted:
+            return
+        try:
+            identifier = self.store.save_collection(name, identifier)
+            self.reload_collections(identifier)
+            self.offset = 0
+            self.refresh()
+            self.status.setText("集合已保存。在此集合内导入的图片会自动加入。")
+        except Exception as exc:
+            self.status.setText("集合未保存：" + str(exc))
+
+    def remove_collection(self):
+        identifier = self.collection.currentData()
+        if not identifier or self.worker or not self.confirm_details():
+            return
+        answer = QMessageBox.question(self, "移除集合",
+            "仅移除这个集合及其归类关系；图片仍保留在全部素材中。",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            self.store.delete_collection(identifier)
+            self.reload_collections()
+            self.refresh()
+            self.status.setText("集合已移除，图片仍保留。")
+        except Exception as exc:
+            self.status.setText("集合未移除：" + str(exc))
+
+    def organize_collections(self):
+        if not self.current_id or self.worker or not self.confirm_details():
+            return
+        collections = self.store.collections()
+        if not collections:
+            self.status.setText("请先在「管理集合」中新建集合，再加入图片。")
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle("整理图片所属集合")
+        dialog.resize(400, 420)
+        box = QVBoxLayout(dialog)
+        box.addWidget(label("一张图片可以属于多个集合。取消勾选只移出集合，图片仍保留。"))
+        choices = QListWidget()
+        choices.setAccessibleName("图片所属集合")
+        box.addWidget(choices)
+        memberships = set(self.store.asset_collections(self.current_id))
+        for record in collections:
+            item = QListWidgetItem(record["name"])
+            item.setData(Qt.ItemDataRole.UserRole, record["id"])
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if record["id"] in memberships else Qt.CheckState.Unchecked)
+            choices.addItem(item)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        box.addWidget(buttons)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        try:
+            self.store.set_collections(self.current_id, [
+                choices.item(i).data(Qt.ItemDataRole.UserRole) for i in range(choices.count())
+                if choices.item(i).checkState() == Qt.CheckState.Checked])
+            self.reload_collections()
+            self.refresh()
+            self.status.setText("图片所属集合已保存。")
+        except Exception as exc:
+            self.status.setText("集合归类未保存：" + str(exc))
+
+    def palette_model(self):
+        if self.palette_provider:
+            return self.palette_provider()
+        if self.local_palette_model is None:
+            from ..palette_model import PaletteModel
+            self.local_palette_model = PaletteModel(self.data_root / "palettes.json", self)
+        return self.local_palette_model
+
+    def extract_palette(self):
+        if not self.current_id or self.worker or not self.confirm_details():
+            return
+        try:
+            model = self.palette_model()
+            if model.store.read_only:
+                raise ValueError(model.store.warning)
+            if len(model.library["palettes"]) >= 100:
+                raise ValueError("配色库已有 100 个色板，请先整理配色库")
+            self.start_job("extract", self.current_id)
+        except Exception as exc:
+            self.status.setText("无法开始提色：" + str(exc))
+
+    def create_palette_from_result(self, result):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("从参考图创建色板")
+        dialog.resize(460, 300)
+        box = QVBoxLayout(dialog)
+        box.addWidget(label("近似主色 · 保存后可从色板跳回来源图片", "section"))
+        swatches = QHBoxLayout()
+        for code in result["colors"]:
+            chip = label(code)
+            chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            from ..design_core import contrast_ratio
+            foreground = "#FFFFFF" if contrast_ratio(code, "#FFFFFF") >= 4.5 else "#203C31"
+            chip.setStyleSheet(f"background:{code}; color:{foreground}; padding:12px 4px; border-radius:6px;")
+            swatches.addWidget(chip)
+        box.addLayout(swatches)
+        box.addWidget(label("色板名称"))
+        name = QLineEdit(result["source"]["title"][:80])
+        name.setMaxLength(80)
+        name.setAccessibleName("新色板名称")
+        box.addWidget(name)
+        box.addWidget(label("从预览图提取最多 6 个近似主色；透明区域可能忽略，不用于印刷校样。", "muted"))
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+        buttons.button(QDialogButtonBox.StandardButton.Save).setText("保存并打开色板")
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        name.textChanged.connect(lambda value: buttons.button(QDialogButtonBox.StandardButton.Save).setEnabled(bool(value.strip())))
+        box.addWidget(buttons)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            self.status.setText("已取消创建色板，素材保持不变。")
+            return
+        try:
+            model = self.palette_model()
+            if not model.add_from_asset(name.text().strip(), result["colors"], result["source"]):
+                self.status.setText("色板未保存，请检查配色库状态或磁盘空间；素材仍保留。")
+                return
+            self.status.setText("已创建关联色板；来源图片和集合保持不变。")
+            self.palette_requested.emit()
+        except Exception as exc:
+            self.status.setText("色板未保存：" + str(exc))
+
+    def open_linked_palette(self):
+        if not self.current_id or self.worker or not self.confirm_details():
+            return
+        try:
+            model = self.palette_model()
+            matches = model.source_palettes(self.store.library_id, self.current_id)
+            if not matches:
+                self.status.setText("这张图片尚无关联色板。可从「更多操作」选择「从图片创建色板」。")
+                return
+            chosen = matches[0][0]
+            if len(matches) > 1:
+                labels = [f"{index + 1}. {name}" for index, name in matches]
+                value, accepted = QInputDialog.getItem(self, "选择关联色板", "色板", labels, 0, False)
+                if not accepted:
+                    return
+                chosen = matches[labels.index(value)][0]
+            if model.set_preferences(selected=chosen):
+                self.palette_requested.emit()
+            else:
+                self.status.setText("无法打开色板：选择状态未保存。")
+        except Exception as exc:
+            self.status.setText("无法打开关联色板：" + str(exc))
+
+    def show_source(self, source):
+        if self.worker:
+            raise ValueError("素材任务正在进行，结束后再查看来源")
+        if source["library_id"] != self.store.library_id:
+            raise ValueError("来源属于另一个素材库；颜色仍可使用，请先恢复对应图片库")
+        record = self.store.get(source["asset_id"])
+        if record["hash"] != source["hash"]:
+            raise ValueError("来源图片标识不匹配，未跳转")
+        if not self.confirm_details():
+            return False
+        self.search_timer.stop()
+        for field in (self.search, self.scope, self.collection):
+            field.blockSignals(True)
+        self.search.clear()
+        self.scope.setCurrentIndex(self.scope.findData("trash" if record["deleted"] else "all"))
+        self.collection.setCurrentIndex(0)
+        for field in (self.search, self.scope, self.collection):
+            field.blockSignals(False)
+        rows, _ = self.store.list_assets(scope=self.scope.currentData(), limit=10000)
+        position = next(i for i, row in enumerate(rows) if row["id"] == record["id"])
+        self.offset = position // self.PAGE_SIZE * self.PAGE_SIZE
+        self.refresh(selected=record["id"])
+        return True
 
     def choose_files(self):
         paths, _ = QFileDialog.getOpenFileNames(self, "导入图片", "", "图片 (*.png *.jpg *.jpeg)")
@@ -501,6 +740,7 @@ class AssetPage(QWidget):
         if self.worker:
             return
         self.search_timer.stop()
+        self.import_collection = self.collection.currentData() if kind in ("import", "clipboard") else None
         self.worker = AssetJob(self.store.root, kind, payload, self)
         self.worker.progress.connect(self.job_progress)
         self.worker.finished.connect(self.job_finished)
@@ -513,7 +753,7 @@ class AssetPage(QWidget):
         self.cancel_button.setEnabled(True)
         for widget in (self.import_button, self.paste_button, self.backup_button, self.restore_backup_button,
                        self.editor, self.save_button, self.remove_button, self.list, self.search, self.scope,
-                       self.previous, self.next):
+                       self.previous, self.next, self.collection, self.manage_collections, self.more_button):
             widget.setEnabled(False)
         self.worker.start()
 
@@ -544,6 +784,7 @@ class AssetPage(QWidget):
             Path(name).unlink(missing_ok=True)
         self.store.close()
         self.store = replacement
+        self.reload_collections()
         self.current_id = None
         self.offset = 0
         if self.reference:
@@ -557,7 +798,7 @@ class AssetPage(QWidget):
         self.worker = None
         job.deleteLater()
         for widget in (self.import_button, self.paste_button, self.backup_button, self.restore_backup_button,
-                       self.list, self.search, self.scope):
+                       self.list, self.search, self.scope, self.collection, self.manage_collections):
             widget.setEnabled(True)
         self.progress.hide()
         self.cancel_button.hide()
@@ -575,6 +816,19 @@ class AssetPage(QWidget):
             self.status.setText(("备份已保存：" if kind == "backup" else "已切换到恢复的素材库：") +
                                 result.get("path", "") if state == "success" else
                                 ("任务已取消，原素材库保留。" if state == "cancelled" else "任务未完成，原素材库保留。"))
+        if self.import_collection and result["ids"]:
+            for asset_id in result["ids"]:
+                try:
+                    self.store.set_collections(asset_id, [self.import_collection])
+                except Exception as exc:
+                    result["errors"].append("图片已入库，但未加入集合：" + str(exc))
+            self.import_collection = None
+        self.reload_collections()
+        if kind == "extract":
+            if state == "success" and not self.exit_after_job:
+                self.create_palette_from_result(result)
+            else:
+                self.status.setText("提色已取消。" if state == "cancelled" else "提色未完成，请查看原因。")
         self.errors.setPlainText("\n".join(result["errors"]))
         self.errors.setVisible(bool(result["errors"]))
         self.refresh(selected=result["ids"][0] if result["ids"] else None)

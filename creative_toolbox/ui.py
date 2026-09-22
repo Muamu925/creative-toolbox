@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, QUrl, QSize
-from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPainter, QPixmap, QAction
+from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPainter, QPixmap, QAction, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
     QFormLayout, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow,
@@ -293,6 +293,8 @@ class MainWindow(QMainWindow):
         self.protection_reason = getattr(backend, "unavailable_reason", "")
         self.workspace = WorkspaceStore(store.root / "workspace.json")
         self.tool_pages = {}
+        self.help_page = None
+        self.help_topic = "start"
         self.setWindowTitle("创作工具箱 · Creative Toolbox")
         self.setWindowIcon(app_icon())
         self.resize(1180, 800)
@@ -323,7 +325,7 @@ class MainWindow(QMainWindow):
             side.addWidget(nav)
             self.nav[key] = nav
         side.addStretch()
-        for key, name in (("protection", "创作保护"), ("settings", "设置")):
+        for key, name in (("protection", "创作保护"), ("settings", "设置"), ("help", "帮助")):
             nav = button(name, lambda checked=False, route=key: self.navigate(route))
             nav.setCheckable(True)
             side.addWidget(nav)
@@ -338,6 +340,10 @@ class MainWindow(QMainWindow):
         self.breadcrumb = label("WORKSPACE  /  首页", "eyebrow")
         top.addWidget(self.breadcrumb)
         top.addStretch()
+        help_action = button("本页帮助", lambda: self.open_help())
+        help_action.setObjectName("secondary")
+        help_action.setToolTip("查看当前功能说明 · F1")
+        top.addWidget(help_action)
         top.addWidget(label(backend.label, "muted"))
         self.mode_badge = button("●  观察模式", lambda: self.navigate("protection"))
         self.mode_badge.setToolTip("打开创作保护，查看状态或暂停")
@@ -367,12 +373,15 @@ class MainWindow(QMainWindow):
             page.open_requested.connect(self.open_tool)
             page.favorite_requested.connect(self.toggle_tool_favorite)
             page.directory_requested.connect(lambda: self.navigate("tools"))
+            page.help_requested.connect(lambda: self.open_help("start"))
             self.pages.addWidget(page)
             self.entry_pages[kind] = page
         bottom = QHBoxLayout()
         self.footer = label("自动保存日志不记录按键内容；工具资料保存在本机。", "muted", True)
         bottom.addWidget(self.footer, 1)
         content.addLayout(bottom)
+        self.help_shortcut = QShortcut(QKeySequence("F1"), self)
+        self.help_shortcut.activated.connect(lambda: self.open_help())
         self.make_tray()
         self.navigate("home")
         self.refresh_profiles()
@@ -561,13 +570,17 @@ class MainWindow(QMainWindow):
             self.tray.show()
 
     def mark_route(self, route, title):
+        if route != "help":
+            self.help_topic = {"home": "start", "library": "assets", "tools": "start"}.get(route, route)
         for key, nav in self.nav.items():
             nav.setChecked(key == route)
         self.protection_tabs.setVisible(route == "protection")
         self.breadcrumb.setText("WORKSPACE  /  " + title)
 
     def navigate(self, route):
-        if route == "protection":
+        if route == "help":
+            self.open_help("start")
+        elif route == "protection":
             self.open_tool("protection")
         elif route == "settings":
             self.switch_page(3)
@@ -583,6 +596,11 @@ class MainWindow(QMainWindow):
             page = TOOL_BY_ID[tool_id].factory(self.store.root)
             self.pages.addWidget(page)
             self.tool_pages[tool_id] = page
+            if tool_id == "assets":
+                page.palette_provider = lambda: self.palette_page.model
+                page.palette_requested.connect(lambda: self.open_tool("palettes"))
+            elif tool_id == "palettes":
+                page.source_requested.connect(self.open_asset_source)
         return self.tool_pages[tool_id]
 
     @property
@@ -605,9 +623,32 @@ class MainWindow(QMainWindow):
         self.pages.setCurrentWidget(page)
         tool = TOOL_BY_ID[tool_id]
         self.mark_route(tool.area, tool.name)
+        self.help_topic = tool_id
         if tool_id == "protection":
             self.select_protection_tab(0)
         self.remember_tool(tool_id)
+
+    def open_help(self, topic=None):
+        if self.help_page is None:
+            from .help_ui import HelpPage
+            self.help_page = HelpPage()
+            self.help_page.open_requested.connect(self.open_tool)
+            self.help_page.home_requested.connect(lambda: self.navigate("home"))
+            self.pages.addWidget(self.help_page)
+        selected_topic = topic or (self.help_page.current_topic.id if self.pages.currentWidget() is self.help_page and self.help_page.current_topic else self.help_topic)
+        self.help_page.show_topic(selected_topic)
+        self.pages.setCurrentWidget(self.help_page)
+        self.mark_route("help", "帮助")
+
+    def open_asset_source(self, source):
+        if not source:
+            return
+        try:
+            page = self.ensure_tool("assets")
+            if page.show_source(source):
+                self.open_tool("assets")
+        except Exception as exc:
+            self.palette_page.status.setText("无法查看来源：" + str(exc))
 
     def refresh_entries(self):
         for page in self.entry_pages.values():

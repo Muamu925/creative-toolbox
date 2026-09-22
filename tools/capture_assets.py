@@ -49,55 +49,59 @@ def sample(path, background, accent, title, tall=False):
     assert image.save(str(path), "PNG")
 
 
-app = QApplication([])
-app.setStyleSheet(STYLE)
-app.setFont(QFont("Microsoft YaHei UI" if os.name == "nt" else "PingFang SC", 10))
-with tempfile.TemporaryDirectory() as temporary:
-    root = Path(temporary)
-    window = MainWindow(DemoBackend(), Store(root / "data", DemoBackend.platform), Settings(), start_timer=False)
-    window.resize(1180, 800)
-    window.open_tool("assets")
-    page = window.tool_pages["assets"]
-    window.show()
+def main():
+    app = QApplication([])
+    app.setStyleSheet(STYLE)
+    app.setFont(QFont("Microsoft YaHei UI" if os.name == "nt" else "PingFang SC", 10))
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        window = MainWindow(DemoBackend(), Store(root / "data", DemoBackend.platform), Settings(), start_timer=False)
+        window.resize(1180, 800)
+        window.open_tool("assets")
+        page = window.tool_pages["assets"]
+        window.show()
 
-    def empty():
-        window.grab().save(str(ART / "empty.png"))
-        ids = []
-        for index, (title, bg, accent, word) in enumerate([
-            ("秋日音乐节 · 海报构图", "#d7dfce", "#748e68", "AUTUMN"),
-            ("自然色调 · 封面方向", "#eadfc5", "#b48768", "NATURE"),
-            ("片头版式 · 暖色研究", "#e9d7d2", "#c88470", "RHYTHM"),
-        ]):
-            path = root / f"sample-{index}.png"
-            sample(path, bg, accent, word, index == 0)
-            asset_id, _ = page.store.add_file(path)
-            page.store.update(asset_id, title, ["海报", "自然"] if index == 0 else ["候选"],
-                              "程序生成示例 · 非外部作品", "留意标题与留白的关系。", index == 0)
-            ids.append(asset_id)
-        page.refresh(selected=ids[0])
-        window.demo_ids = ids
-        QTimer.singleShot(250, full)
+        def empty():
+            window.grab().save(str(ART / "empty.png"))
+            ids = []
+            for index, (title, bg, accent, word) in enumerate([
+                ("秋日音乐节 · 海报构图", "#d7dfce", "#748e68", "AUTUMN"),
+                ("自然色调 · 封面方向", "#eadfc5", "#b48768", "NATURE"),
+                ("片头版式 · 暖色研究", "#e9d7d2", "#c88470", "RHYTHM"),
+            ]):
+                path = root / f"sample-{index}.png"
+                sample(path, bg, accent, word, index == 0)
+                asset_id, _ = page.store.add_file(path)
+                page.store.update(asset_id, title, ["海报", "自然"] if index == 0 else ["候选"],
+                                  "程序生成示例 · 非外部作品", "留意标题与留白的关系。", index == 0)
+                ids.append(asset_id)
+            page.refresh(selected=ids[0])
+            window.demo_ids = ids
+            QTimer.singleShot(250, full)
 
-    def full():
-        window.grab().save(str(OUT / "asset-inbox.png"))
-        window.resize(1020, 720)
-        QTimer.singleShot(200, compact)
+        def full():
+            window.grab().save(str(OUT / "asset-inbox.png"))
+            window.resize(1020, 720)
+            QTimer.singleShot(200, compact)
 
-    def compact():
-        window.grab().save(str(ART / "compact.png"))
-        page.open_reference()
-        QTimer.singleShot(200, reference)
+        def compact():
+            window.grab().save(str(ART / "compact.png"))
+            page.open_reference()
+            QTimer.singleShot(200, reference)
 
-    def reference():
-        page.reference.grab().save(str(OUT / "asset-reference.png"))
-        page.reference.close()
-        page.store.set_deleted(window.demo_ids[2], True)
-        page.scope.setCurrentIndex(page.scope.findData("trash"))
-        QTimer.singleShot(150, finish)
+        def reference():
+            page.reference.grab().save(str(OUT / "asset-reference.png"))
+            page.reference.close()
+            page.store.set_deleted(window.demo_ids[2], True)
+            page.scope.setCurrentIndex(page.scope.findData("trash"))
+            QTimer.singleShot(150, finish)
 
-    def finish():
-        window.grab().save(str(ART / "trash.png"))
-        window.quit_app()
+        def finish():
+            window.grab().save(str(ART / "trash.png"))
+            window.quit_app()
 
-    QTimer.singleShot(300, empty)
-    app.exec()
+        QTimer.singleShot(300, empty)
+        app.exec()
+
+if __name__ == "__main__":
+    main()

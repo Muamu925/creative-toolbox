@@ -91,7 +91,7 @@ def note_ms(bpm: float, denominator: int, modifier: str = '普通') -> float:
 
 
 def validate_library(raw: object) -> dict:
-    if not isinstance(raw, dict) or raw.get('schema') != 1:
+    if not isinstance(raw, dict) or raw.get('schema') not in (1, 2):
         raise ValueError("不支持的配色库格式")
     palettes = raw.get('palettes')
     if not isinstance(palettes, list) or not 1 <= len(palettes) <= 100:
@@ -115,8 +115,19 @@ def validate_library(raw: object) -> dict:
                     raise ValueError('收藏状态必须为布尔值')
                 item['favorite'] = color['favorite']
             items.append(item)
-        clean.append({'name': name.strip(), 'colors': items})
-    result = {'schema': 1, 'palettes': clean}
+        entry = {'name': name.strip(), 'colors': items}
+        if 'source_asset' in palette:
+            source = palette['source_asset']
+            if raw['schema'] != 2 or not isinstance(source, dict):
+                raise ValueError("图片来源需要新版配色格式")
+            for key, length in (('library_id', 32), ('asset_id', 32), ('hash', 64)):
+                if not isinstance(source.get(key), str) or not re.fullmatch(r'[0-9a-f]{%d}' % length, source[key]):
+                    raise ValueError("图片来源标识无效")
+            if not isinstance(source.get('title'), str) or not 0 < len(source['title']) <= 200:
+                raise ValueError("图片来源名称无效")
+            entry['source_asset'] = {key: source[key] for key in ('library_id', 'asset_id', 'hash', 'title')}
+        clean.append(entry)
+    result = {'schema': raw['schema'], 'palettes': clean}
     if 'preferences' in raw:
         prefs = raw['preferences']
         if not isinstance(prefs, dict):

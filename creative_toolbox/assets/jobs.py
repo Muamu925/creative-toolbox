@@ -56,6 +56,16 @@ class AssetJob(QThread):
                 self.result["state"] = "partial" if self.result["errors"] else "success"
                 if self.result["errors"] and not self.result["ids"]:
                     self.result["state"] = "failed"
+            elif self.kind == "extract":
+                from ..image_processing import image_colors
+                record = store.get(self.payload)
+                check_cancel(self.cancel)
+                colors = image_colors(str(store.path_for(self.payload, True)))
+                check_cancel(self.cancel)
+                self.result.update(state="success", colors=colors, source={
+                    "library_id": store.library_id, "asset_id": record["id"],
+                    "hash": record["hash"], "title": record["title"]})
+                done = 1
             elif self.kind == "backup":
                 store.export_backup(self.payload, self.cancel,
                                     lambda d, t: self.progress.emit(d, t, "正在校验并备份"))

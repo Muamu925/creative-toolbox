@@ -18,6 +18,7 @@ class WorkspacePage(QWidget):
     open_requested = Signal(str)
     favorite_requested = Signal(str)
     directory_requested = Signal()
+    help_requested = Signal()
 
     def __init__(self, kind, store, protection_reason=""):
         super().__init__()
@@ -51,6 +52,10 @@ class WorkspacePage(QWidget):
             action = QPushButton("浏览全部工具 →")
             action.clicked.connect(self.directory_requested.emit)
             root.addWidget(action, 0, Qt.AlignmentFlag.AlignLeft)
+            guide = QPushButton("第一次使用？查看上手指南")
+            guide.setObjectName("secondary")
+            guide.clicked.connect(self.help_requested.emit)
+            root.addWidget(guide, 0, Qt.AlignmentFlag.AlignLeft)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         self.body = QWidget()

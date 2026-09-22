@@ -28,7 +28,7 @@ class WorkspaceTests(unittest.TestCase):
     def test_search_keywords_case_and_multiple_terms(self):
         self.assertEqual([t.id for t in search_tools("BPM")], ["calculators"])
         self.assertEqual([t.id for t in search_tools("毫米 ppi")], ["calculators"])
-        self.assertEqual([t.id for t in search_tools("分组")], ["fonts"])
+        self.assertEqual([t.id for t in search_tools("分组")], ["assets", "fonts"])
         self.assertEqual(search_tools("不存在的工具"), [])
 
     def test_favorites_recent_roundtrip_and_no_document_data(self):

@@ -1,17 +1,16 @@
 """Local design helpers, independent of the automatic-save controller."""
 from __future__ import annotations
 
-from collections import Counter
 from copy import deepcopy
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QColor, QColorSpace, QFont, QImageReader
+from PySide6.QtCore import Qt, QSize, Signal
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QFileDialog, QFontComboBox, QFrame, QGridLayout, QHBoxLayout, QInputDialog,
     QLabel, QLineEdit, QMenu, QMessageBox, QPlainTextEdit, QPushButton, QScrollArea,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget,
+    QSpinBox, QTabWidget, QVBoxLayout, QWidget, QSizePolicy,
 )
 
 from .design_core import (
@@ -19,6 +18,7 @@ from .design_core import (
     normalize_hex, note_ms, print_mm, print_pixels, scaled_height,
 )
 
+from .image_processing import image_colors
 from .palette_model import PaletteModel
 from .palette_widgets import FloatingPalette, export_palette_png
 
@@ -49,40 +49,9 @@ def copy(value):
     QApplication.clipboard().setText(value)
 
 
-def image_colors(path: str) -> list[str]:
-    """Bounded sRGB thumbnail histogram; an approximate palette, not ICC proofing."""
-    reader = QImageReader(path)
-    reader.setAutoTransform(True)
-    size = reader.size()
-    if not size.isValid() or size.width() * size.height() > 40_000_000:
-        raise ValueError('请选择不超过 4000 万像素的图片')
-    reader.setScaledSize(size.scaled(QSize(160, 160), Qt.AspectRatioMode.KeepAspectRatio))
-    image = reader.read()
-    if image.isNull():
-        raise ValueError('无法读取图片：' + reader.errorString())
-    if image.colorSpace().isValid():
-        image.convertToColorSpace(QColorSpace(QColorSpace.NamedColorSpace.SRgb))
-    image = image.scaled(160, 160, Qt.AspectRatioMode.KeepAspectRatio,
-                         Qt.TransformationMode.SmoothTransformation)
-    counts, sums = Counter(), {}
-    for y in range(image.height()):
-        for x in range(image.width()):
-            color = image.pixelColor(x, y)
-            if color.alpha() < 128:
-                continue
-            values = (color.red(), color.green(), color.blue())
-            key = tuple(v // 32 for v in values)
-            counts[key] += 1
-            total = sums.setdefault(key, [0, 0, 0])
-            for i, v in enumerate(values):
-                total[i] += v
-    if not counts:
-        raise ValueError('图片没有可提取的不透明颜色')
-    return ['#' + ''.join(f'{round(v / count):02X}' for v in sums[key])
-            for key, count in counts.most_common(6)]
-
 
 class PalettePage(QWidget):
+    source_requested = Signal(object)
     def __init__(self, path: Path):
         super().__init__()
         self.model = PaletteModel(path, self)
@@ -92,7 +61,16 @@ class PalettePage(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.addWidget(text('把灵感，存成颜色。', 'title'))
-        root.addWidget(text('项目色板 · 点击色块复制 · HEX / RGB / HSL · 全部保存在本机', 'muted'))
+        provenance = QHBoxLayout()
+        self.source_label = text("", "muted")
+        self.source_label.setMaximumHeight(36)
+        self.source_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.source_button = action("查看来源图片", lambda: self.source_requested.emit(self.current().get("source_asset")))
+        self.source_button.setObjectName("secondary")
+        provenance.addWidget(self.source_label, 1)
+        provenance.addWidget(self.source_button)
+        root.addLayout(provenance)
+
         self.tabs = QTabWidget()
         root.addWidget(self.tabs, 1)
         library = QWidget()
@@ -208,6 +186,11 @@ class PalettePage(QWidget):
             self.model.set_preferences(selected=index)
 
     def render(self):
+        source = self.current().get("source_asset")
+        self.source_label.setText("来源图片：" + source["title"] if source else "项目色板 · 点击色块复制 · HEX / RGB / HSL · 全部保存在本机")
+        self.source_button.setVisible(bool(source))
+        self.source_label.setVisible(True)
+        self.source_label.setToolTip(source["title"] if source else "")
         while self.grid.count():
             item = self.grid.takeAt(0)
             if item.widget():
@@ -375,6 +358,7 @@ class PalettePage(QWidget):
                 incoming = PaletteStore.read(Path(path))
                 candidate = deepcopy(self.library)
                 candidate['palettes'].extend(incoming['palettes'])
+                candidate['schema'] = max(candidate['schema'], incoming['schema'])
                 self.persist(candidate, len(self.library['palettes']))
             except (OSError, ValueError) as exc:
                 self.status.setText(f'未导入：{exc}')
