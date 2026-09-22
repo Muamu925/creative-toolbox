@@ -97,6 +97,7 @@ class ReferenceWindow(QDialog):
 
 class AssetPage(QWidget):
     palette_requested = Signal()
+    feedback = Signal(str)
     PAGE_SIZE = 60
 
     def __init__(self, data_root: Path):
@@ -132,8 +133,8 @@ class AssetPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
-        layout.addWidget(label("把参考收好，创作时找得到。", "title"))
-        layout.addWidget(label("拖入 PNG / JPEG，或主动粘贴图片。先收集，之后再整理。", "muted"))
+        layout.addWidget(label("图片素材", "title"))
+        layout.addWidget(label("拖入或粘贴图片，稍后整理。支持 PNG / JPEG。", "muted"))
         bar = QHBoxLayout()
         self.import_button = button("导入图片", self.choose_files, True)
         self.paste_button = button("粘贴图片", self.paste_image)
@@ -272,7 +273,7 @@ class AssetPage(QWidget):
         layout.addLayout(progress_row)
         self.progress.hide()
         self.cancel_button.hide()
-        self.status = label("图片仅保存在本机；移到回收站后仍可恢复。", "muted")
+        self.status = label("移到回收站的图片仍可恢复。", "muted")
         layout.addWidget(self.status)
         self.errors = QPlainTextEdit()
         self.errors.setReadOnly(True)
@@ -441,7 +442,8 @@ class AssetPage(QWidget):
             return False
         self.dirty = False
         self.save_button.setEnabled(False)
-        self.status.setText("名称、标签、来源与备注已保存。")
+        self.status.setText("整理已保存")
+        self.feedback.emit("整理已保存")
         # Do not rebuild the list in currentItemChanged; preserve its live item pointers.
         for index in range(self.list.count()):
             item = self.list.item(index)

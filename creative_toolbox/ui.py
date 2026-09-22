@@ -27,6 +27,7 @@ from .storage import Settings, Store
 
 from .theme import STYLE, WorkspaceCanvas, GlassPanel, application_icon, icon
 from .appearance import AppearanceStore
+from .motion import MotionStack, NavigationMotion, FeedbackToast
 
 
 def label(text: str, name: str = "", wrap: bool = False) -> QLabel:
@@ -267,8 +268,8 @@ class MainWindow(QMainWindow):
             nav.setIconSize(QSize(20, 20))
             side.addWidget(nav)
             self.nav[key] = nav
-        side.addWidget(label("留住每一次灵感。"))
         side.addWidget(label(f"本地运行  /  v{__version__}"))
+        self.nav_motion = NavigationMotion(sidebar, self.appearance.reduced_motion)
         root.addWidget(sidebar)
         content = QVBoxLayout()
         content.setContentsMargins(0, 0, 12, 4)
@@ -299,7 +300,8 @@ class MainWindow(QMainWindow):
             tabs.addWidget(action)
         tabs.addStretch()
         content.addWidget(self.protection_tabs)
-        self.pages = QStackedWidget()
+        self.pages = MotionStack(self.appearance.reduced_motion)
+        self.feedback_toast = FeedbackToast(central, self.appearance.reduced_motion)
         content.addWidget(self.pages, 1)
         root.addLayout(content, 1)
         self.build_dashboard()
@@ -316,7 +318,7 @@ class MainWindow(QMainWindow):
             self.pages.addWidget(page)
             self.entry_pages[kind] = page
         bottom = QHBoxLayout()
-        self.footer = label("自动保存日志不记录按键内容；工具资料保存在本机。", "muted", True)
+        self.footer = label("资料保存在本机 · F1 查看帮助", "muted", True)
         bottom.addWidget(self.footer, 1)
         content.addLayout(bottom)
         self.help_shortcut = QShortcut(QKeySequence("F1"), self)
@@ -352,10 +354,10 @@ class MainWindow(QMainWindow):
         return layout
 
     def build_dashboard(self):
-        layout = self.page("安心创作，适时保存。", "为设计、剪辑、三维和音乐软件，建立属于你的保存节奏。")
+        layout = self.page("创作保护", "在输入空闲时辅助保存。先观察，再开启。")
         hero, hero_layout = panel("hero")
         header = QHBoxLayout()
-        header.addWidget(label("SMART SAVE", "eyebrow"))
+        header.addWidget(label("自动保存", "eyebrow"))
         header.addStretch()
         self.profile_count = label("0 个应用已启用", "muted")
         header.addWidget(self.profile_count)
@@ -389,7 +391,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(metrics)
         live, live_layout = panel()
         row = QHBoxLayout()
-        row.addWidget(label("此刻的工作状态", "section"))
+        row.addWidget(label("当前状态", "section"))
         row.addStretch()
         row.addWidget(button("管理应用 →", lambda: self.switch_page(1)))
         live_layout.addLayout(row)
@@ -407,7 +409,7 @@ class MainWindow(QMainWindow):
         layout.addStretch()
 
     def build_profiles(self):
-        layout = self.page("每个应用，各有节奏。", "预设仅作起点，默认未启用。推荐从实际运行的应用添加，准确识别版本。")
+        layout = self.page("应用规则", "预设默认关闭。添加正在使用的软件，再设置保存节奏。")
         bar = QHBoxLayout()
         bar.addWidget(button("＋ 添加应用", self.add_profile, True))
         self.capture_button = button("从前台应用添加", self.begin_capture)
@@ -437,7 +439,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(note)
 
     def build_events(self):
-        layout = self.page("每一步，都有记录。", "区分观察、提醒和保存请求。发送快捷键不代表文件已写入磁盘。")
+        layout = self.page("活动记录", "区分观察、提醒和保存请求。发送快捷键不代表文件已写入磁盘。")
         row = QHBoxLayout()
         row.addWidget(label("本次运行", "section"))
         row.addStretch()
@@ -459,7 +461,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(label("历史日志保留在本地；不包含文档标题、文件内容或键盘输入文本。", "muted", True))
 
     def build_preferences(self):
-        layout = self.page("让工具适应你的习惯。", "设置作为应用的默认值，每个应用都可以独立覆盖。")
+        layout = self.page("设置", "调整保存快捷键和显示偏好。")
         card, col = panel()
         col.addWidget(label("保存快捷键", "section"))
         form = QFormLayout()
@@ -477,35 +479,44 @@ class MainWindow(QMainWindow):
         self.global_style.currentIndexChanged.connect(self.update_global_custom)
         self.update_global_custom()
         col.addWidget(label("自动：Windows 使用 Ctrl+S，macOS 使用 ⌘+S。\n切换只改变发送的组合键，不会修改创作软件本身的快捷键。", "muted", True))
-        col.addWidget(button("保存偏好设置", self.save_preferences, True), 0, Qt.AlignmentFlag.AlignLeft)
+        col.addWidget(button("保存快捷键", self.save_preferences, True), 0, Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(card)
         appearance, appearance_layout = panel()
         appearance_layout.addWidget(label("外观", "section"))
-        appearance_layout.addWidget(label("冷白与钴蓝 · 清晰的内容区，轻盈的导航层。", "muted", True))
+        appearance_layout.addWidget(label("按你的习惯调整显示效果。", "muted", True))
         self.reduce_transparency = QCheckBox("减少透明效果")
         self.reduce_transparency.setChecked(self.appearance.reduced)
         self.reduce_transparency.setToolTip("将导航与顶部栏切换为不透明表面，立即生效。")
         self.reduce_transparency.toggled.connect(self.change_appearance)
         appearance_layout.addWidget(self.reduce_transparency)
-        self.appearance_notice = label(self.appearance.warning or "修改后立即生效，并在本机记住。", "muted", True)
+        self.reduce_motion = QCheckBox("减少动态效果")
+        self.reduce_motion.setChecked(self.appearance.reduced_motion)
+        self.reduce_motion.setToolTip("关闭页面、导航与提示的动画，操作反馈仍会显示。")
+        self.reduce_motion.toggled.connect(self.change_appearance)
+        appearance_layout.addWidget(self.reduce_motion)
+        self.appearance_notice = label(self.appearance.warning or "更改立即生效，自动保存。", "muted", True)
         appearance_layout.addWidget(self.appearance_notice)
         layout.addWidget(appearance)
         local, local_layout = panel()
-        local_layout.addWidget(label("本地运行，随时可控", "section"))
-        local_layout.addWidget(label("每次启动从观察模式开始。关闭窗口后可继续在系统托盘运行；在托盘菜单中选择「退出」即可停止。\n此初版尚未实现版本备份、云同步或软件内部工作状态适配。", "muted", True))
-        local_layout.addWidget(button("打开配置与日志文件夹", self.open_data), 0, Qt.AlignmentFlag.AlignLeft)
+        local_layout.addWidget(label("后台运行", "section"))
+        local_layout.addWidget(label("每次启动先进入观察模式。关闭窗口后可在托盘运行；从托盘选择「退出」即可停止。", "muted", True))
+        local_layout.addWidget(button("打开数据文件夹", self.open_data), 0, Qt.AlignmentFlag.AlignLeft)
         if self.backend.platform == "darwin":
             local_layout.addWidget(button("打开 macOS 辅助功能设置", lambda: QDesktopServices.openUrl(QUrl("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"))))
             local_layout.addWidget(button("打开 macOS 输入监控设置", lambda: QDesktopServices.openUrl(QUrl("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"))))
         layout.addWidget(local)
         layout.addStretch()
 
-    def change_appearance(self, reduced):
+    def change_appearance(self, _=None):
+        reduced = self.reduce_transparency.isChecked()
+        reduced_motion = self.reduce_motion.isChecked()
+        for component in (self.pages, self.nav_motion, self.feedback_toast):
+            component.set_reduced_motion(reduced_motion)
         for surface in (self.canvas, self.sidebar_material, self.top_material):
             surface.reduced = reduced
             surface.update()
         try:
-            saved = self.appearance.save(reduced)
+            saved = self.appearance.save(reduced, reduced_motion)
             self.appearance_notice.setText("外观已保存。" if saved else self.appearance.warning)
         except OSError:
             self.appearance_notice.setText("已应用到本次窗口，但未能保存。请检查数据目录的写入权限。")
@@ -537,6 +548,7 @@ class MainWindow(QMainWindow):
             nav.setChecked(key == route)
             if key != route and nav.hasFocus():
                 nav.clearFocus()
+        self.nav_motion.select(self.nav[route])
         self.protection_tabs.setVisible(route == "protection")
         self.breadcrumb.setText("工作空间  /  " + title)
 
@@ -559,6 +571,8 @@ class MainWindow(QMainWindow):
             page = TOOL_BY_ID[tool_id].factory(self.store.root)
             self.pages.addWidget(page)
             self.tool_pages[tool_id] = page
+            if hasattr(page, "feedback"):
+                page.feedback.connect(self.feedback_toast.show_message)
             if tool_id == "assets":
                 page.palette_provider = lambda: self.palette_page.model
                 page.palette_requested.connect(lambda: self.open_tool("palettes"))
@@ -620,7 +634,7 @@ class MainWindow(QMainWindow):
             self.footer.setText(self.workspace.warning)
             self._workspace_footer = self.workspace.warning
         elif self.footer.text() == getattr(self, "_workspace_footer", None):
-            self.footer.setText("自动保存日志不记录按键内容；工具资料保存在本机。")
+            self.footer.setText("资料保存在本机 · F1 查看帮助")
             self._workspace_footer = None
 
     def remember_tool(self, tool_id):
@@ -636,6 +650,8 @@ class MainWindow(QMainWindow):
         try:
             self.workspace.toggle_favorite(tool_id)
             self.workspace.warning = ""
+            favorite = tool_id in self.workspace.data["favorites"]
+            self.feedback_toast.show_message("已加入常用工具" if favorite else "已取消收藏")
         except (OSError, ValueError) as exc:
             self.workspace.warning = f"收藏未保存：{exc}"
         self.refresh_entries()
@@ -685,6 +701,9 @@ class MainWindow(QMainWindow):
             return
         self.quitting = True
         self.timer.stop()
+        self.pages.finish_transition()
+        self.nav_motion.stop()
+        self.feedback_toast.stop()
         if assets:
             assets.shutdown()
         if "palettes" in self.tool_pages:
@@ -816,6 +835,7 @@ class MainWindow(QMainWindow):
         try:
             self.store.save(candidate)
         except (OSError, ValueError) as exc:
+            self.feedback_toast.stop()
             QMessageBox.warning(self, "设置未保存", str(exc))
             return False
         self.settings = candidate
@@ -823,6 +843,7 @@ class MainWindow(QMainWindow):
         self.disarm()
         self.refresh_profiles()
         self.on_event(Event("system", "设置", "设置已保存；切回观察模式以检查新规则"))
+        self.feedback_toast.show_message("设置已保存 · 已切回观察模式")
         return True
 
     def add_profile(self, checked=False, seed=None):

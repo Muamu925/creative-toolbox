@@ -6,7 +6,7 @@
 
 这是通用快捷键初版，**“已发送保存请求”不代表已确认保存成功**。它不读取应用文档内容，不能可靠判断文档是否修改、是否首次保存、是否在全部自定义编辑状态中，也不能读取 DAW 的录音/MIDI 或剪辑软件的渲染状态。OS 键盘空闲不包括所有 MIDI 或数位板工作状态。
 
-130 项自动化测试已通过，覆盖 Windows 原生状态读取、输入包构造、核心规则、配色库、颜色与尺寸计算和 Qt 界面；Windows 独立程序已通过启动与自身界面渲染检查。真实跨进程 Ctrl+S 的隔离测试中，系统曾接受输入，但未取得接收窗口确认；后续尝试又遇到前台焦点被切换，测试按规则取消。**目前不把真实编辑软件的自动保存标为已验证**，应先在可丢弃测试文件中试用。
+140 项自动化测试已通过，覆盖 Windows 原生状态读取、输入包构造、核心规则、配色库、颜色与尺寸计算和 Qt 界面；Windows 独立程序已通过启动与自身界面渲染检查。真实跨进程 Ctrl+S 的隔离测试中，系统曾接受输入，但未取得接收窗口确认；后续尝试又遇到前台焦点被切换，测试按规则取消。**目前不把真实编辑软件的自动保存标为已验证**，应先在可丢弃测试文件中试用。
 
 macOS 已通过 GitHub 托管运行器上的构建和自动化测试，尚未完成真实用户环境的安装、权限与宿主软件交互验收。版本备份、项目素材归档、开机自启、云同步和各创作软件深度适配尚未实现。
 
@@ -94,3 +94,9 @@ GitHub 仓库：[Muamu925/creative-toolbox](https://github.com/Muamu925/creative
 在仓库根目录运行 `python tools/prepare_brand_assets.py` 可从提交的母版和 Phosphor SVG 重建 PNG、ICO 与 ICNS，依赖开发环境已有的 PySide6.QtSvg，不需要联网。运行时只使用 PNG。PyInstaller 和 setuptools 都包含 `creative_toolbox/resources`，分发文档附带图标许可证。
 
 界面审阅：`python -m tools.capture_design_review review-name`。本机默认使用原生 Qt 字体；无显示环境可明确设置 `QT_QPA_PLATFORM=offscreen`，但其字体渲染不可替代原生视觉验收。
+
+## 0.7.1 动效与反馈
+
+`creative_toolbox/motion.py` 提供页面快照过渡、导航选中动效和可替换的轻提示。所有动画均有限时长，支持立即关闭。不要在失败分支发出成功反馈；错误继续留在原页面。
+
+录制：`python -m tools.capture_motion`。可选的 `python tools/encode_motion.py` 使用 Pillow 生成演示 GIF；Pillow 只用于文档作者，不是运行依赖。录制仅访问应用自己的窗口，使用独立临时数据，结束时会在剪贴板仍为演示结果的条件下恢复原内容。

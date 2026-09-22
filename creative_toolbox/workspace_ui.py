@@ -29,9 +29,9 @@ class WorkspacePage(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(14)
         heading, subtitle = {
-            "home": ("创作，从这里继续。", "收集灵感、整理资料，让手边的工具各就其位。"),
-            "library": ("你的资源库", "收集参考图片，整理字体与色板；资料保存在本机。"),
-            "tools": ("所有工具", "直接开始一个小任务，无需先创建项目。"),
+            "home": ("继续创作", "常用工具和创作资料，都在这里。"),
+            "library": ("资源库", "整理图片、字体和色板。"),
+            "tools": ("所有工具", "选一个工具，直接开始。"),
         }[kind]
         root.addWidget(text(heading, "title"))
         root.addWidget(text(subtitle, "muted"))
@@ -42,22 +42,22 @@ class WorkspacePage(QWidget):
             self.search = QLineEdit()
             self.search.setAccessibleName("搜索工具")
             self.search.setClearButtonEnabled(True)
-            self.search.setPlaceholderText("搜索工具，例如：字体、毫米、BPM、提色、保存")
+            self.search.setPlaceholderText("试试：字体、尺寸、BPM")
             self.search.textChanged.connect(self.refresh)
             root.addWidget(self.search)
         elif kind == "home":
-            collect = QPushButton("收集参考图片")
+            collect = QPushButton("收集图片")
             collect.setObjectName("primary")
             collect.clicked.connect(lambda: self.open_requested.emit("assets"))
             quick = QHBoxLayout()
             quick.setSpacing(10)
             quick.addWidget(collect)
-            action = QPushButton("浏览全部工具 →")
+            action = QPushButton("全部工具 →")
             action.clicked.connect(self.directory_requested.emit)
             quick.addWidget(action)
             quick.addStretch()
             root.addLayout(quick)
-            guide = QPushButton("第一次使用？查看上手指南")
+            guide = QPushButton("使用指南")
             guide.setObjectName("secondary")
             guide.clicked.connect(self.help_requested.emit)
             root.addWidget(guide, 0, Qt.AlignmentFlag.AlignLeft)
@@ -121,7 +121,7 @@ class WorkspacePage(QWidget):
             for tool in favorites:
                 self.add_tool(tool, compact=True)
             if not favorites:
-                self.rows.addWidget(text("还没有收藏的工具。在工具页点击「收藏」，下次从这里打开。", "muted"))
+                self.rows.addWidget(text("收藏工具后，会显示在这里。", "muted"))
             self.rows.addWidget(text("最近使用", "section"))
             recent = [TOOL_BY_ID[item["id"]] for item in self.store.data["recent"] if item["id"] in TOOL_BY_ID]
             for tool in recent[:5]:
@@ -129,11 +129,11 @@ class WorkspacePage(QWidget):
                 action.clicked.connect(lambda checked=False, key=tool.id: self.open_requested.emit(key))
                 self.rows.addWidget(action)
             if not recent:
-                self.rows.addWidget(text("最近打开的工具会显示在这里，方便下次继续。", "muted"))
+                self.rows.addWidget(text("打开过的工具会显示在这里。", "muted"))
         else:
             matches = search_tools(self.search.text()) if self.kind == "tools" else [tool for tool in TOOLS if tool.area == "library"]
             for tool in matches:
                 self.add_tool(tool)
             if not matches:
-                self.rows.addWidget(text("没有找到工具。试试「尺寸」「字体」或「保存」。", "muted"))
+                self.rows.addWidget(text("没有找到，换个关键词试试。", "muted"))
         self.rows.addStretch()

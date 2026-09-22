@@ -21,7 +21,8 @@ def copy_distribution_docs(output: Path) -> None:
     names.update(d.metadata["Name"] for d in metadata.distributions()
                  if d.metadata.get("Name", "").lower().startswith("pyobjc"))
     manifest = ["Bundled third-party components retain their own licenses.",
-                "The project MIT license does not replace these licenses.", "Phosphor Icons (MIT): https://github.com/phosphor-icons/core", ""]
+                "The project MIT license does not replace these licenses.",
+                "Design references: VoltAgent/awesome-design-md (MIT); see docs/design-references/LICENSE.upstream.", "Phosphor Icons (MIT): https://github.com/phosphor-icons/core", ""]
     for name in sorted(names):
         distribution = metadata.distribution(name)
         manifest.append(f"{name} {distribution.version}")

@@ -9,6 +9,7 @@ class AppearanceStore:
     def __init__(self, path: Path):
         self.path = path
         self.reduced = False
+        self.reduced_motion = False
         self.warning = ''
         self.read_only = False
         try:
@@ -20,12 +21,18 @@ class AppearanceStore:
                     raise ValueError('不支持的版本')
                 if type(raw.get('reduced_transparency')) is not bool:
                     raise ValueError('透明效果设置无效')
+                if type(raw.get('reduced_motion', False)) is not bool:
+                    raise ValueError('动态效果设置无效')
                 self.reduced = raw['reduced_transparency']
+                self.reduced_motion = raw.get('reduced_motion', False)
         except (OSError, ValueError, TypeError) as exc:
             self.read_only = True
             self.warning = f'外观偏好未载入：{exc}。原文件保留，本次可临时调整。'
 
-    def save(self, reduced: bool):
+    def save(self, reduced: bool, reduced_motion=None):
+        motion = self.reduced_motion if reduced_motion is None else reduced_motion
+        if type(motion) is not bool:
+            raise ValueError("动态效果设置必须是布尔值")
         if type(reduced) is not bool:
             raise ValueError('外观设置必须是布尔值')
         if self.read_only:
@@ -34,11 +41,12 @@ class AppearanceStore:
         fd, name = tempfile.mkstemp(dir=self.path.parent, suffix='.tmp')
         try:
             with os.fdopen(fd, 'w', encoding='utf-8') as stream:
-                json.dump({'schema': 1, 'reduced_transparency': reduced}, stream)
+                json.dump({'schema': 1, 'reduced_transparency': reduced, 'reduced_motion': motion}, stream)
                 stream.flush()
                 os.fsync(stream.fileno())
             os.replace(name, self.path)
             self.reduced = reduced
+            self.reduced_motion = motion
             return True
         finally:
             if os.path.exists(name):

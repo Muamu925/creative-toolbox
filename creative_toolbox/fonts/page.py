@@ -1,7 +1,7 @@
 """Native font browser with virtualized previews and independent metadata."""
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QSize, QAbstractListModel, QSortFilterProxyModel, QTimer
+from PySide6.QtCore import Qt, QSize, QAbstractListModel, QSortFilterProxyModel, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetrics, QTextCursor
 from PySide6.QtWidgets import (
     QApplication, QAbstractItemView, QCheckBox, QComboBox, QDialog, QDialogButtonBox,
@@ -139,6 +139,8 @@ class FontDelegate(QStyledItemDelegate):
 
 
 class FontPage(QWidget):
+    feedback = Signal(str)
+
     def __init__(self, path=None, available=None):
         super().__init__()
         self.library = FontLibrary(path)
@@ -149,8 +151,8 @@ class FontPage(QWidget):
         self._refreshing = False
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(label("让好字体，下次也找得到。", "title"))
-        root.addWidget(label("本机字体 · 项目分组 · 标签收藏 · 多栏对照。缺字可能由系统回退显示。", "muted"))
+        root.addWidget(label("字体库", "title"))
+        root.addWidget(label("预览和整理本机字体。缺字可能由系统回退显示。", "muted"))
         self.sample = QPlainTextEdit(self.library.data["preferences"].get("sample") or SAMPLE)
         self.sample.setAccessibleName("字体预览文案")
         self.sample.setMaximumHeight(70)
@@ -175,7 +177,7 @@ class FontPage(QWidget):
         filter_row = QHBoxLayout()
         self.search = QLineEdit()
         self.search.setAccessibleName("搜索字体名、别名或标签")
-        self.search.setPlaceholderText("搜索字体名、别名或标签（空格组合）")
+        self.search.setPlaceholderText("搜索字体名、别名或标签")
         self.search.setClearButtonEnabled(True)
         filter_row.addWidget(self.search, 1)
         self.system = QComboBox()
@@ -352,7 +354,7 @@ class FontPage(QWidget):
             parts.append("无匹配字体，可清除筛选或切换分组")
         self.count.setText(" · ".join(parts))
 
-    def run_change(self, operation, message="已保存字体整理信息。"):
+    def run_change(self, operation, message="字体整理已保存"):
         selected = set(self.selected())
         try:
             result = operation()
@@ -367,6 +369,7 @@ class FontPage(QWidget):
             if index.data(Qt.ItemDataRole.UserRole) in selected:
                 selection.select(index, selection.SelectionFlag.Select)
         self.status.setText(message)
+        self.feedback.emit(message)
         return True
 
     def add_group(self):
@@ -493,6 +496,7 @@ class FontPage(QWidget):
         if family in self.model.available:
             QApplication.clipboard().setText(family)
             self.status.setText("已复制字体名称："+family)
+            self.feedback.emit("已复制 " + family)
 
     def repaint_list(self):
         self.list.doItemsLayout()

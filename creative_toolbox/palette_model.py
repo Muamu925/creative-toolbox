@@ -39,7 +39,7 @@ class PaletteModel(QObject):
         self.history.append(old)
         self.history = self.history[-20:]
         self.changed.emit(True)
-        self.message.emit('已保存到本机；可撤销最近 20 次色板修改。')
+        self.message.emit('已保存 · 可撤销')
         return True
 
     def _save(self, candidate):
@@ -76,7 +76,7 @@ class PaletteModel(QObject):
             return False
         self.history.pop()
         self.changed.emit(True)
-        self.message.emit('已撤销上一次色板修改。撤销历史仅保留在本次运行中。')
+        self.message.emit('已撤销上一次修改')
         return True
 
     def toggle_favorite(self, index):

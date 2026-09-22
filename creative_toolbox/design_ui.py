@@ -52,6 +52,7 @@ def copy(value):
 
 class PalettePage(QWidget):
     source_requested = Signal(object)
+    feedback = Signal(str)
     def __init__(self, path: Path):
         super().__init__()
         self.model = PaletteModel(path, self)
@@ -60,7 +61,7 @@ class PalettePage(QWidget):
         self.edit_index = None
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(text('把灵感，存成颜色。', 'title'))
+        root.addWidget(text('色板', 'title'))
         provenance = QHBoxLayout()
         self.source_label = text("", "muted")
         self.source_label.setMaximumHeight(36)
@@ -76,7 +77,7 @@ class PalettePage(QWidget):
         library = QWidget()
         layout = QVBoxLayout(library)
         layout.setSpacing(12)
-        self.tabs.addTab(library, '我的配色卡')
+        self.tabs.addTab(library, '我的色板')
         row = QHBoxLayout()
         self.palettes = QComboBox()
         self.palettes.setAccessibleName('当前色板')
@@ -149,14 +150,19 @@ class PalettePage(QWidget):
         row.addWidget(action('生成配色', self.generate))
         row.addStretch()
         layout.addLayout(row)
-        self.status = text(self.store.warning or '点击色块复制；可编辑名称、色号，并导出整个配色库。', 'muted')
+        self.status = text(self.store.warning or '点击色块复制；修改后自动保存。', 'muted')
         layout.addWidget(self.status)
         self.palettes.currentIndexChanged.connect(self.palette_changed)
         self.format.currentTextChanged.connect(lambda style: self.model.set_preferences(style=style))
         self.model.changed.connect(self.sync_model)
-        self.model.message.connect(self.status.setText)
+        self.model.message.connect(self.report_result)
         self.build_contrast()
         self.sync_model(True)
+
+    def report_result(self, message):
+        self.status.setText(message)
+        if message.startswith('已'):
+            self.feedback.emit(message)
 
     @property
     def library(self):
@@ -188,7 +194,7 @@ class PalettePage(QWidget):
 
     def render(self):
         source = self.current().get("source_asset")
-        self.source_label.setText("来源图片：" + source["title"] if source else "项目色板 · 点击色块复制 · HEX / RGB / HSL · 全部保存在本机")
+        self.source_label.setText("来源图片：" + source["title"] if source else "点击色块复制，保存常用配色。")
         self.source_button.setVisible(bool(source))
         self.source_label.setVisible(True)
         self.source_label.setToolTip(source["title"] if source else "")
@@ -200,7 +206,7 @@ class PalettePage(QWidget):
         colors = self.current()['colors']
         displayed = [(i, c) for i, c in enumerate(colors) if not self.favorites_only.isChecked() or c.get('favorite', False)]
         if not displayed:
-            hint = '还没有收藏颜色。取消筛选后，点击颜色下方的收藏按钮。' if self.favorites_only.isChecked() else '色板还是空的。在下方输入色号，添加第一个颜色。'
+            hint = '还没有收藏。取消筛选后，点颜色下方的「收藏」。' if self.favorites_only.isChecked() else '在下方输入色号，添加第一个颜色。'
             self.grid.addWidget(text(hint, 'muted'), 0, 0, 1, 3)
         for position, (i, color) in enumerate(displayed):
             card = QFrame()
@@ -262,7 +268,7 @@ class PalettePage(QWidget):
             self.status.setText('色板为空，没有可复制的颜色。')
             return
         copy('\n'.join(values))
-        self.status.setText(f'已逐行复制当前色板全部 {len(values)} 个颜色。')
+        self.report_result(f'已复制 {len(values)} 个颜色')
 
     def export_png(self):
         if not self.current()['colors']:
@@ -283,7 +289,7 @@ class PalettePage(QWidget):
 
     def copy_color(self, value):
         copy(value)
-        self.status.setText(f'已复制 {value}')
+        self.report_result(f'已复制 {value}')
 
     def cancel_edit(self):
         self.edit_index = None
@@ -377,7 +383,7 @@ class PalettePage(QWidget):
 
     def copy_css(self):
         copy(css_palette(self.current()))
-        self.status.setText('已复制当前色板的 CSS 变量。')
+        self.report_result('已复制 CSS 变量')
 
     def generate(self):
         try:
@@ -416,7 +422,7 @@ class PalettePage(QWidget):
         layout.addWidget(self.contrast_preview)
         self.contrast_result = text('')
         layout.addWidget(self.contrast_result)
-        layout.addWidget(text('按 WCAG 2.2 的不透明 sRGB 颜色计算。大号文字指至少 18 pt，或至少 14 pt 的粗体；这里只检查颜色对比，不代表整体无障碍合规。', 'muted'))
+        layout.addWidget(text('仅检查文字与背景的颜色对比。计算规则见本页帮助。', 'muted'))
         layout.addStretch()
         self.foreground.textChanged.connect(self.update_contrast)
         self.background.textChanged.connect(self.update_contrast)
@@ -435,12 +441,14 @@ class PalettePage(QWidget):
 
 
 class CalculatorPage(QWidget):
+    feedback = Signal(str)
+
     def __init__(self):
         super().__init__()
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
-        root.addWidget(text('少切一个页面，多一点专注。', 'title'))
-        root.addWidget(text('印刷尺寸、画面比例、音乐延迟，用同一组本地工具完成。', 'muted'))
+        root.addWidget(text('尺寸与节奏', 'title'))
+        root.addWidget(text('换算尺寸、比例和音符时长。', 'muted'))
         tabs = QTabWidget()
         root.addWidget(tabs, 1)
         page = QWidget()
@@ -450,6 +458,7 @@ class CalculatorPage(QWidget):
         self.print_direction = QComboBox()
         self.print_direction.addItems(['毫米 → 像素', '像素 → 毫米'])
         self.print_width, self.print_height, self.ppi = number(210), number(297), number(300, 9600)
+        self.ppi.setToolTip("PPI 是每英寸像素数，和打印机 DPI 不同。")
         grid = QGridLayout()
         for i, (title, field) in enumerate([('转换方向', self.print_direction), ('宽', self.print_width), ('高', self.print_height), ('PPI（每英寸像素）', self.ppi)]):
             grid.addWidget(text(title), i, 0)
@@ -457,8 +466,8 @@ class CalculatorPage(QWidget):
         layout.addLayout(grid)
         self.print_result = text('', 'metric')
         layout.addWidget(self.print_result)
-        layout.addWidget(action('复制结果', lambda: copy(self.print_result.text())))
-        layout.addWidget(text('像素取最接近的整数。PPI 描述图像像素密度；打印机 DPI 不是同一个量。换算不会修改图片，也不包含出血。', 'muted'))
+        layout.addWidget(action('复制结果', lambda: self.copy_result(self.print_result.text())))
+        layout.addWidget(text('结果已取整，不含出血；不会修改原图。', 'muted'))
         layout.addStretch()
         for field in (self.print_width, self.print_height, self.ppi):
             field.valueChanged.connect(self.update_print)
@@ -477,7 +486,7 @@ class CalculatorPage(QWidget):
         layout.addLayout(grid)
         self.ratio_result = text('', 'metric')
         layout.addWidget(self.ratio_result)
-        layout.addWidget(action('复制尺寸', lambda: copy(self.ratio_result.text())))
+        layout.addWidget(action('复制尺寸', lambda: self.copy_result(self.ratio_result.text())))
         layout.addWidget(text('结果四舍五入至整数像素。', 'muted'))
         layout.addStretch()
         self.update_ratio()
@@ -496,12 +505,20 @@ class CalculatorPage(QWidget):
         self.tempo_result = text('')
         self.tempo_result.setStyleSheet('font-size:22px; padding:24px; background:white; border-radius:12px;')
         layout.addWidget(self.tempo_result)
-        layout.addWidget(action('复制时值表', lambda: copy(self.tempo_result.text())))
+        layout.addWidget(action('复制时值表', lambda: self.copy_result(self.tempo_result.text())))
         layout.addWidget(text('仅作数值计算；不监听麦克风、MIDI 或宿主播放状态。', 'muted'))
         layout.addStretch()
         self.bpm.valueChanged.connect(self.update_tempo)
         self.note_modifier.currentIndexChanged.connect(self.update_tempo)
         self.update_tempo()
+        self.copy_status = text("", "muted")
+        self.copy_status.setAccessibleName("操作结果")
+        root.addWidget(self.copy_status)
+
+    def copy_result(self, value):
+        copy(value)
+        self.copy_status.setText('已复制结果')
+        self.feedback.emit('已复制结果')
 
     def update_print(self):
         width, height, ppi = self.print_width.value(), self.print_height.value(), self.ppi.value()

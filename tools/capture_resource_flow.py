@@ -70,7 +70,7 @@ def main():
                     if target:
                         window.grab().save(str(OUT / target))
                 QTimer.singleShot(80, step)
-            QTimer.singleShot(160, capture)
+            QTimer.singleShot(210, capture)
         QTimer.singleShot(180, step)
         app.exec()
 

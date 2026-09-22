@@ -4,11 +4,17 @@
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.7.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
+**Version 0.7.1 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.7.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.0/CreativeToolbox-0.7.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.7.1 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.1/CreativeToolbox-0.7.1-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.1) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
-## A unified workspace in 0.7
+## Interaction improvements in 0.7.1
+
+Brief page transitions, a moving navigation indicator, and confirmation toasts after successful actions. **Reduce motion** in Settings disables animations while keeping feedback visible. Page titles and actions use shorter, task-oriented wording.
+
+![Actual application: navigation, copy feedback and reduced motion](assets/demo/interaction-demo.gif)
+
+## A unified workspace
 
 Cold white, graphite and cobalt; consistent rounded controls, line icons and glass-style navigation above opaque content. Enable **Reduce transparency** in Settings. The material is drawn inside the application, not native Liquid Glass. Resource colors and font specimens remain unchanged. [Design specification (Chinese)](DESIGN.md)
 
@@ -107,7 +113,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 130 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
+There are 140 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 

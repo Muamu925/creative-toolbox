@@ -37,7 +37,10 @@ QWidget#sidebar QLabel#brand { color: @ink; font-size: 20px; font-weight: 700; }
 QWidget#sidebar QPushButton { text-align: left; padding: 12px 14px; background: transparent;
     color: @muted; border: 1px solid transparent; border-radius: 12px; font-size: 14px; }
 QWidget#sidebar QPushButton:hover { background: @surface; color: @ink; }
-QWidget#sidebar QPushButton:checked { color: @accent; background: @tint; border-color: #D1DDF9; }
+QWidget#sidebar QPushButton:checked { color: @accent; background: transparent; border-color: transparent; }
+QFrame#navSelection { background: @tint; border: 1px solid #D1DDF9; border-radius: 12px; }
+QFrame#feedbackToast { background: @surface; border: 1px solid #9EB6EC; border-radius: 12px; }
+QFrame#feedbackToast QLabel { color: @accent; font-weight: 600; }
 QWidget#sidebar QPushButton:focus { border: 2px solid @accent; padding: 11px 13px; }
 QLabel#title { font-size: 26px; font-weight: 700; color: @ink; }
 QLabel#eyebrow { color: @muted; font-size: 11px; font-weight: 600; }

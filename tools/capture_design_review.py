@@ -5,6 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 from PySide6.QtGui import QFont
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from creative_toolbox.ui import MainWindow, STYLE
 from creative_toolbox.storage import Store, Settings
@@ -30,6 +31,7 @@ def main():
                 window.resize(width, height)
                 app.processEvents()
                 app.processEvents()
+                QTest.qWait(200)
                 window.grab().save(str(output / f"{route}-{width}.png"))
         window.reduce_transparency.setChecked(True)
         window.navigate("settings")

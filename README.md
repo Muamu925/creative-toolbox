@@ -4,11 +4,17 @@
 
 一个本地运行、跨应用使用的桌面工具箱，面向平面/UI 设计、视频剪辑、三维与音乐创作中的日常辅助任务。长期方向是覆盖「准备素材 → 正在创作 → 整理交付」的综合创作工作台。
 
-**当前为 0.7.0 早期预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。多图参考板、项目管理、批量交付与音视频处理尚未实现。
+**当前为 0.7.1 早期预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。多图参考板、项目管理、批量交付与音视频处理尚未实现。
 
-[**下载 Windows 0.7.0 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.0/CreativeToolbox-0.7.0-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.0) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
+[**下载 Windows 0.7.1 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.1/CreativeToolbox-0.7.1-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.1) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
 
-## 0.7 的界面更新
+## 0.7.1 的交互更新
+
+页面短暂过渡、导航选中项平滑移动，复制与保存后显示轻提示。设置中可开启「减少动态效果」。标题和操作文案更简洁。
+
+![真实窗口：切页、复制反馈与关闭动效](assets/demo/interaction-demo.gif)
+
+## 统一的界面
 
 冷白＋钴蓝、统一圆角与线性导航图标，玻璃风格导航与不透明内容区。设置中可开启「减少透明效果」。这是跨平台绘制的近似材质，不是原生 Liquid Glass；图片、色号和字体样张保留原貌。[设计规范](DESIGN.md)
 
@@ -40,7 +46,7 @@
 
 ![图片素材库：搜索、整理与预览](assets/demo/asset-inbox.png)
 
-从首页点击「收集参考图片」，或从「资源库 → 图片素材库」进入。可拖入 PNG / JPEG 或点击「粘贴图片」；图片复制到本地托管目录，不依赖原文件位置。详见 [图片素材库使用说明](docs/ASSET_LIBRARY.md)。
+从首页点击「收集图片」，或从「资源库 → 图片素材库」进入。可拖入 PNG / JPEG 或点击「粘贴图片」；图片复制到本地托管目录，不依赖原文件位置。详见 [图片素材库使用说明](docs/ASSET_LIBRARY.md)。
 
 <details>
 <summary>查看帮助中心：搜索问题、了解功能并直接打开工具</summary>
@@ -54,22 +60,22 @@
 新入口与数据说明见 [首页与工具使用指南](docs/WORKSPACE.md)。下方为新版字体与色彩工作台的实际窗口。
 
 <details>
-<summary>查看字体工作台示例：分组、标签与多栏对照</summary>
+<summary>查看字体库示例：分组、标签与多栏对照</summary>
 
-![字体工作台：本机字体与示例项目分组](assets/demo/font-library.png)
+![字体库：本机字体与示例项目分组](assets/demo/font-library.png)
 
-![字体工作台：真实可用样式的多栏对照](assets/demo/font-compare.png)
+![字体库：真实可用样式的多栏对照](assets/demo/font-compare.png)
 
 Windows 原生界面，使用本机字体与独立示例整理数据。选择多个字体后可批量加入分组、收藏或添加标签；同一字体可属于多个组。整理结果存储在本机 fonts.json，支持 JSON 备份合并，备份不包含字体文件。
 
-当前只整理系统可用字体；未安装字体文件、系统安装与激活尚未实现。字体家族按本机完整名称匹配，跨系统备份中的不可用字体会保留记录。缺字可能由系统回退显示。详见 [字体工作台使用说明](docs/FONT_WORKSPACE.md)。
+当前只整理系统可用字体；未安装字体文件、系统安装与激活尚未实现。字体家族按本机完整名称匹配，跨系统备份中的不可用字体会保留记录。缺字可能由系统回退显示。详见 [字体库使用说明](docs/FONT_WORKSPACE.md)。
 
 </details>
 
 <details>
 <summary>查看色彩模块示例：悬浮复制、收藏与导出</summary>
 
-![配色工作台：统一界面与保留原色的色板](assets/demo/palette-workspace.png)
+![色板：统一界面与保留原色的色板](assets/demo/palette-workspace.png)
 
 Windows 实际窗口，使用独立示例数据。色彩工具是综合工具箱中的一个模块。
 
@@ -112,7 +118,7 @@ Windows 实际窗口，使用独立示例数据。色彩工具是综合工具箱
 - [分享使用反馈或需求](https://github.com/Muamu925/creative-toolbox/issues/new?template=feedback.yml)：最想省去的是哪个重复操作？
 - [贡献说明](CONTRIBUTING.md) · [开发与构建](docs/DEVELOPMENT.md) · [功能路线](docs/FEATURE_ROADMAP.md)
 
-当前有 130 项自动化测试，覆盖保存规则、字体整理、配色持久化、悬浮同步、换算、工具入口与故障降级，以及素材收集、集合升级、关联色板、帮助导航、备份校验和独立恢复；另覆盖外观持久化、图标与文字对比度。自动化测试不能代替所有创作软件的真实兼容性验证。
+当前有 140 项自动化测试，覆盖保存规则、字体整理、配色持久化、悬浮同步、换算、工具入口与故障降级，以及素材收集、集合升级、关联色板、帮助导航、备份校验和独立恢复；另覆盖外观持久化、图标与文字对比度。自动化测试不能代替所有创作软件的真实兼容性验证。
 
 如果这个工具帮你省下了来回切换的时间，欢迎 Star 收藏，也欢迎告诉我们哪里还不顺手。
 

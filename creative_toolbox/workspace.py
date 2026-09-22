@@ -42,11 +42,11 @@ class Tool:
 
 
 TOOLS = (
-    Tool("assets", "图片素材库", "按集合整理参考图，关联配色，置顶查看。",
+    Tool("assets", "图片素材", "按集合整理参考图，关联配色，置顶查看。",
          "素材 图片 参考 收集 集合 分组 标签 备份 提色 image asset reference collection", "library", _assets),
-    Tool("fonts", "字体工作台", "用自己的文案选字，整理分组、标签与候选字体。",
+    Tool("fonts", "字体库", "预览字体，按项目分组，再并排对照。",
          "字体 文字 字样 排版 对照 比较 分组 font typography", "library", _fonts),
-    Tool("palettes", "配色工作台", "保存常用色板、从图片提色，悬浮复制颜色。",
+    Tool("palettes", "色板", "保存配色、图片提色，随手复制色号。",
          "色卡 色号 颜色 配色 图片 提色 对比度 hex rgb hsl color palette", "library", _palette),
     Tool("calculators", "创作换算", "换算毫米、像素与 PPI，计算比例和 BPM 音符时长。",
          "毫米 像素 尺寸 等比 缩放 节奏 音乐 延迟 毫秒 mm px ppi bpm size music", "tools", _calculators),
