@@ -18,11 +18,12 @@ os.environ.setdefault("PYINSTALLER_CONFIG_DIR", str(ROOT / ".runtime" / "pyinsta
 args = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed",
         "--name", "CreativeToolbox", "--specpath", "build", "--distpath", "dist",
         "--workpath", "build/work", "--paths", str(ROOT)]
+args += ["--add-data", str(ROOT / "creative_toolbox" / "resources") + os.pathsep + "creative_toolbox/resources"]
 icon = ROOT / "assets" / "toolbox.ico"
 if sys.platform == "win32" and icon.exists():
     args += ["--icon", str(icon)]
 if sys.platform == "darwin":
-    args += ["--osx-bundle-identifier", "org.creativetoolbox.desktop"]
+    args += ["--osx-bundle-identifier", "org.creativetoolbox.desktop", "--icon", str(ROOT / "assets" / "toolbox.icns")]
 args += ["run.py"]
 subprocess.run(args, check=True)
 if sys.platform == "win32":

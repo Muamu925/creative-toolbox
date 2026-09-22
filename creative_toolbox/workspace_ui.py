@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QVBoxLayout, QWidget,
 )
+from .theme import icon
 from .workspace import TOOLS, TOOL_BY_ID, search_tools
 
 
@@ -28,9 +29,9 @@ class WorkspacePage(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(14)
         heading, subtitle = {
-            "home": ("今天，从这里开始。", "常用工具与最近使用，随时接着做。"),
-            "library": ("你的创作资料。", "收集参考图片，整理字体与色板；资料保存在本机。"),
-            "tools": ("找到眼前需要的工具。", "直接开始一个小任务，无需先创建项目。"),
+            "home": ("创作，从这里继续。", "收集灵感、整理资料，让手边的工具各就其位。"),
+            "library": ("你的资源库", "收集参考图片，整理字体与色板；资料保存在本机。"),
+            "tools": ("所有工具", "直接开始一个小任务，无需先创建项目。"),
         }[kind]
         root.addWidget(text(heading, "title"))
         root.addWidget(text(subtitle, "muted"))
@@ -48,10 +49,14 @@ class WorkspacePage(QWidget):
             collect = QPushButton("收集参考图片")
             collect.setObjectName("primary")
             collect.clicked.connect(lambda: self.open_requested.emit("assets"))
-            root.addWidget(collect, 0, Qt.AlignmentFlag.AlignLeft)
+            quick = QHBoxLayout()
+            quick.setSpacing(10)
+            quick.addWidget(collect)
             action = QPushButton("浏览全部工具 →")
             action.clicked.connect(self.directory_requested.emit)
-            root.addWidget(action, 0, Qt.AlignmentFlag.AlignLeft)
+            quick.addWidget(action)
+            quick.addStretch()
+            root.addLayout(quick)
             guide = QPushButton("第一次使用？查看上手指南")
             guide.setObjectName("secondary")
             guide.clicked.connect(self.help_requested.emit)
@@ -63,6 +68,7 @@ class WorkspacePage(QWidget):
         self.rows.setContentsMargins(0, 0, 8, 0)
         self.rows.setSpacing(12)
         scroll.setWidget(self.body)
+        self.body.setAutoFillBackground(False)
         root.addWidget(scroll, 1)
         self.visible_tool_ids = []
         self.refresh()
@@ -70,10 +76,15 @@ class WorkspacePage(QWidget):
     def add_tool(self, tool, compact=False):
         self.visible_tool_ids.append(tool.id)
         card = QFrame()
-        card.setObjectName("card")
+        card.setObjectName("toolRow")
         row = QHBoxLayout(card)
         row.setContentsMargins(18, 14, 18, 14)
+        badge = QLabel()
+        badge.setPixmap(icon(tool.id).pixmap(28, 28))
+        badge.setFixedWidth(42)
+        row.addWidget(badge)
         copy = QVBoxLayout()
+        copy.setSpacing(5)
         copy.addWidget(text(tool.name, "section"))
         if not compact:
             copy.addWidget(text(tool.description, "muted"))
@@ -88,8 +99,8 @@ class WorkspacePage(QWidget):
         star.setEnabled(not self.store.read_only)
         star.clicked.connect(lambda checked=False, key=tool.id: self.favorite_requested.emit(key))
         row.addWidget(star)
-        action = QPushButton("打开")
-        action.setObjectName("primary")
+        action = QPushButton("打开  →")
+        action.setObjectName("secondary")
         action.setAccessibleName("打开" + tool.name)
         action.clicked.connect(lambda checked=False, key=tool.id: self.open_requested.emit(key))
         row.addWidget(action)

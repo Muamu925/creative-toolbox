@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QScrollArea, QSpinBox, QSplitter, QStyledItemDelegate, QStyle, QTabWidget, QVBoxLayout, QWidget,
 )
 
+from ..theme import TOKENS
 from .library import FontLibrary, read_file, write_file
 
 SAMPLE = "创作，让灵感被看见。\nThe quick brown fox jumps over the lazy dog.\n0123456789  Aa Bb Cc"
@@ -106,10 +107,10 @@ class FontDelegate(QStyledItemDelegate):
         available = self.page.model.available.get(family)
         painter.save()
         selected = bool(option.state & QStyle.StateFlag.State_Selected)
-        painter.fillRect(option.rect, QColor("#e1eddc" if selected else "#ffffff"))
+        painter.fillRect(option.rect, QColor(TOKENS["tint"] if selected else TOKENS["surface"]))
         painter.setClipRect(option.rect.adjusted(10, 0, -10, 0))
         painter.setFont(option.font)
-        painter.setPen(QColor("#284d3b"))
+        painter.setPen(QColor(TOKENS["ink"]))
         caption = ("★  " if meta["favorite"] else "") + family
         if meta["alias"]:
             caption += " · " + meta["alias"]
@@ -129,10 +130,10 @@ class FontDelegate(QStyledItemDelegate):
             painter.setPen(QColor("#8b7462"))
             painter.drawText(rect.left(), rect.top()+53, "预览不可用；重新安装后可刷新")
         painter.setFont(option.font)
-        painter.setPen(QColor("#596b61"))
+        painter.setPen(QColor(TOKENS["muted"]))
         tags = " · ".join(meta["tags"]) or "选择后可加入分组、收藏或标记标签"
         painter.drawText(rect.left(), rect.bottom()-1, QFontMetrics(option.font).elidedText(tags, Qt.TextElideMode.ElideRight, rect.width()))
-        painter.setPen(QColor("#e7ede4"))
+        painter.setPen(QColor(TOKENS["line"]))
         painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         painter.restore()
 
@@ -203,7 +204,6 @@ class FontPage(QWidget):
         self.list.setUniformItemSizes(True)
         self.list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.list.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-        self.list.setStyleSheet("QListView {background:white; border:1px solid #d5dfd1; border-radius:6px;}")
         split.addWidget(self.list)
         split.setStretchFactor(1, 1)
         split.setSizes([155, 630])
@@ -267,6 +267,7 @@ class FontPage(QWidget):
         compare_scroll = QScrollArea()
         compare_scroll.setWidgetResizable(True)
         compare_scroll.setWidget(compare_body)
+        compare_body.setAutoFillBackground(False)
         compare_layout.addWidget(compare_scroll, 1)
         self.tabs.addTab(compare, "多栏对照")
         self.status = label(self.library.warning or "Ctrl / Command 多选，Shift 连选；分组与标签保存在本机。", "muted")

@@ -6,7 +6,7 @@
 
 这是通用快捷键初版，**“已发送保存请求”不代表已确认保存成功**。它不读取应用文档内容，不能可靠判断文档是否修改、是否首次保存、是否在全部自定义编辑状态中，也不能读取 DAW 的录音/MIDI 或剪辑软件的渲染状态。OS 键盘空闲不包括所有 MIDI 或数位板工作状态。
 
-81 项自动化测试已通过，覆盖 Windows 原生状态读取、输入包构造、核心规则、配色库、颜色与尺寸计算和 Qt 界面；Windows 独立程序已通过启动与自身界面渲染检查。真实跨进程 Ctrl+S 的隔离测试中，系统曾接受输入，但未取得接收窗口确认；后续尝试又遇到前台焦点被切换，测试按规则取消。**目前不把真实编辑软件的自动保存标为已验证**，应先在可丢弃测试文件中试用。
+130 项自动化测试已通过，覆盖 Windows 原生状态读取、输入包构造、核心规则、配色库、颜色与尺寸计算和 Qt 界面；Windows 独立程序已通过启动与自身界面渲染检查。真实跨进程 Ctrl+S 的隔离测试中，系统曾接受输入，但未取得接收窗口确认；后续尝试又遇到前台焦点被切换，测试按规则取消。**目前不把真实编辑软件的自动保存标为已验证**，应先在可丢弃测试文件中试用。
 
 macOS 已通过 GitHub 托管运行器上的构建和自动化测试，尚未完成真实用户环境的安装、权限与宿主软件交互验收。版本备份、项目素材归档、开机自启、云同步和各创作软件深度适配尚未实现。
 
@@ -86,3 +86,11 @@ GitHub 仓库：[Muamu925/creative-toolbox](https://github.com/Muamu925/creative
 ## 0.4.0 工具入口
 
 详见 [工作台说明与验证记录](WORKSPACE.md)。首屏不创建字体、配色或换算页面；工具首次打开后复用。新增 workspace.json 与原有资源文件分开，保存适配失败返回不发送按键的降级对象。启动测量用 python -m tools.benchmark_workspace；截图用 python -m tools.capture_workspace。
+
+## 0.7 视觉资源
+
+主题令牌与 Qt 样式在 `creative_toolbox/theme.py`；导航材质只绘制应用内表面。外观偏好单独保存到 `appearance.json`，不修改智能保存或资源数据。
+
+在仓库根目录运行 `python tools/prepare_brand_assets.py` 可从提交的母版和 Phosphor SVG 重建 PNG、ICO 与 ICNS，依赖开发环境已有的 PySide6.QtSvg，不需要联网。运行时只使用 PNG。PyInstaller 和 setuptools 都包含 `creative_toolbox/resources`，分发文档附带图标许可证。
+
+界面审阅：`python -m tools.capture_design_review review-name`。本机默认使用原生 Qt 字体；无显示环境可明确设置 `QT_QPA_PLATFORM=offscreen`，但其字体渲染不可替代原生视觉验收。

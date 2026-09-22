@@ -4,9 +4,15 @@
 
 一个本地运行、跨应用使用的桌面工具箱，面向平面/UI 设计、视频剪辑、三维与音乐创作中的日常辅助任务。长期方向是覆盖「准备素材 → 正在创作 → 整理交付」的综合创作工作台。
 
-**当前为 0.6.0 早期预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。多图参考板、项目管理、批量交付与音视频处理尚未实现。
+**当前为 0.7.0 早期预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。多图参考板、项目管理、批量交付与音视频处理尚未实现。
 
-[**下载 Windows 0.6.0 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.6.0/CreativeToolbox-0.6.0-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.6.0) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
+[**下载 Windows 0.7.0 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.0/CreativeToolbox-0.7.0-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.0) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
+
+## 0.7 的界面更新
+
+冷白＋钴蓝、统一圆角与线性导航图标，玻璃风格导航与不透明内容区。设置中可开启「减少透明效果」。这是跨平台绘制的近似材质，不是原生 Liquid Glass；图片、色号和字体样张保留原貌。[设计规范](DESIGN.md)
+
+![冷白与钴蓝工作空间](assets/demo/workspace-home.png)
 
 ## 现在有哪些工具
 
@@ -45,7 +51,7 @@
 
 </details>
 
-新入口与数据说明见 [首页与工具使用指南](docs/WORKSPACE.md)。下方字体与色彩截图来自此前版本，工具能力仍保留。
+新入口与数据说明见 [首页与工具使用指南](docs/WORKSPACE.md)。下方为新版字体与色彩工作台的实际窗口。
 
 <details>
 <summary>查看字体工作台示例：分组、标签与多栏对照</summary>
@@ -63,9 +69,9 @@ Windows 原生界面，使用本机字体与独立示例整理数据。选择多
 <details>
 <summary>查看色彩模块示例：悬浮复制、收藏与导出</summary>
 
-![色彩模块的实际操作：悬浮色卡、选择格式、复制、收藏与导出](assets/demo/palette-demo.gif)
+![配色工作台：统一界面与保留原色的色板](assets/demo/palette-workspace.png)
 
-实际界面操作序列，使用独立示例数据；约 16 秒循环。这段演示展示色彩模块。
+Windows 实际窗口，使用独立示例数据。色彩工具是综合工具箱中的一个模块。
 
 支持带 / 不带 `#` 的 HEX、小写 HEX、RGB、RGB 纯数值、HSL，以及整板复制和 CSS 变量。颜色可命名、收藏、筛选、箭头排序；最近 20 次修改可在本次运行内撤销。收藏、顺序、上次色板与复制格式会保留。
 
@@ -106,7 +112,7 @@ Windows 原生界面，使用本机字体与独立示例整理数据。选择多
 - [分享使用反馈或需求](https://github.com/Muamu925/creative-toolbox/issues/new?template=feedback.yml)：最想省去的是哪个重复操作？
 - [贡献说明](CONTRIBUTING.md) · [开发与构建](docs/DEVELOPMENT.md) · [功能路线](docs/FEATURE_ROADMAP.md)
 
-当前有 122 项自动化测试，覆盖保存规则、字体整理、配色持久化、悬浮同步、换算、工具入口与故障降级，以及素材收集、集合升级、关联色板、帮助导航、备份校验和独立恢复。自动化测试不能代替所有创作软件的真实兼容性验证。
+当前有 130 项自动化测试，覆盖保存规则、字体整理、配色持久化、悬浮同步、换算、工具入口与故障降级，以及素材收集、集合升级、关联色板、帮助导航、备份校验和独立恢复；另覆盖外观持久化、图标与文字对比度。自动化测试不能代替所有创作软件的真实兼容性验证。
 
 如果这个工具帮你省下了来回切换的时间，欢迎 Star 收藏，也欢迎告诉我们哪里还不顺手。
 

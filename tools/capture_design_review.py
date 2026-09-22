@@ -1,6 +1,6 @@
 """Render review states using isolated data and an inert backend."""
 import os
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# Use native platform fonts by default; CI can explicitly choose offscreen.
 import sys
 import tempfile
 from pathlib import Path
@@ -21,7 +21,7 @@ def main():
         window = MainWindow(UnavailableBackend("win32", "隔离审阅：不连接其他应用"),
                             Store(Path(temp), "win32"), Settings(), start_timer=False)
         window.show()
-        for route in ("home", "tools", "library", "palettes", "calculators", "fonts", "protection", "settings"):
+        for route in ("home", "tools", "library", "palettes", "calculators", "fonts", "protection", "settings", "help"):
             if route in ("palettes", "calculators", "fonts"):
                 window.open_tool(route)
             else:
@@ -31,6 +31,10 @@ def main():
                 app.processEvents()
                 app.processEvents()
                 window.grab().save(str(output / f"{route}-{width}.png"))
+        window.reduce_transparency.setChecked(True)
+        window.navigate("settings")
+        app.processEvents()
+        window.grab().save(str(output / "settings-solid-1020.png"))
         window.quit_app()
         window.close()
     print(output.resolve())

@@ -16,7 +16,7 @@ def main() -> int:
     from PySide6.QtWidgets import QApplication, QMessageBox
     from .platforms import load_backend
     from .storage import Store, data_directory
-    from .ui import MainWindow, STYLE
+    from .ui import MainWindow, STYLE, app_icon
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName("CreativeToolbox")
@@ -25,6 +25,7 @@ def main() -> int:
     font = QFont("Microsoft YaHei UI" if sys.platform == "win32" else "PingFang SC", 10)
     app.setFont(font)
     app.setStyleSheet(STYLE)
+    app.setWindowIcon(app_icon())
     store = Store(args.data_dir or data_directory(), sys.platform)
     store.root.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(store.root / "instance.lock"))

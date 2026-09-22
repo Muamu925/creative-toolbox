@@ -14,11 +14,14 @@ def copy_distribution_docs(output: Path) -> None:
         shutil.copy2(ROOT / name, output / name)
     shutil.copytree(ROOT / "docs", output / "docs", dirs_exist_ok=True)
     shutil.copytree(ROOT / "assets" / "demo", output / "assets" / "demo", dirs_exist_ok=True)
+    phosphor = output / "third-party-licenses" / "Phosphor"
+    phosphor.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "creative_toolbox/resources/PHOSPHOR-LICENSE.txt", phosphor / "LICENSE.txt")
     names = {"PySide6-Essentials", "shiboken6", "PyInstaller"}
     names.update(d.metadata["Name"] for d in metadata.distributions()
                  if d.metadata.get("Name", "").lower().startswith("pyobjc"))
     manifest = ["Bundled third-party components retain their own licenses.",
-                "The project MIT license does not replace these licenses.", ""]
+                "The project MIT license does not replace these licenses.", "Phosphor Icons (MIT): https://github.com/phosphor-icons/core", ""]
     for name in sorted(names):
         distribution = metadata.distribution(name)
         manifest.append(f"{name} {distribution.version}")

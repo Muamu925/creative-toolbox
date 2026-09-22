@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QPushButton, QScrollArea, QVBoxLayout, QWidget,
 )
 
+from .theme import application_icon
 from .design_core import COPY_FORMATS, contrast_ratio, validate_library
 
 
@@ -26,6 +27,9 @@ def swatch_ink(code):
 class FloatingPalette(QWidget):
     def __init__(self, model):
         super().__init__(None, Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint)
+        self.setObjectName("floatingSurface")
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setWindowIcon(application_icon())
         self.model = model
         self.setWindowTitle('悬浮色卡 · Creative Toolbox')
         self.resize(440, 380)
@@ -57,6 +61,7 @@ class FloatingPalette(QWidget):
         self.grid = QGridLayout(self.cards)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.area.setWidget(self.cards)
+        self.cards.setAutoFillBackground(False)
         root.addWidget(self.area, 1)
         self.status = label('点击颜色复制；拖动窗口标题栏移动。')
         root.addWidget(self.status)

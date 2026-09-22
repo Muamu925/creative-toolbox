@@ -4,9 +4,15 @@
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.6.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
+**Version 0.7.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.6.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.6.0/CreativeToolbox-0.6.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.6.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.7.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.0/CreativeToolbox-0.7.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+
+## A unified workspace in 0.7
+
+Cold white, graphite and cobalt; consistent rounded controls, line icons and glass-style navigation above opaque content. Enable **Reduce transparency** in Settings. The material is drawn inside the application, not native Liquid Glass. Resource colors and font specimens remain unchanged. [Design specification (Chinese)](DESIGN.md)
+
+![The refreshed workspace](assets/demo/workspace-home.png)
 
 ## Available today
 
@@ -34,7 +40,7 @@ The main window can close to the system tray when available. Reopen or quit from
 
 ![Image library: search, metadata and preview](assets/demo/asset-inbox.png)
 
-See the [workspace guide (Chinese)](docs/WORKSPACE.md). Open the image library from Home or Resources; import/drop PNG or JPEG files or explicitly paste an image. Managed copies remain available if the source moves. See the [image library guide (Chinese)](docs/ASSET_LIBRARY.md). The font and color screenshots below are from earlier versions; those capabilities remain available.
+See the [workspace guide (Chinese)](docs/WORKSPACE.md). Open the image library from Home or Resources; import/drop PNG or JPEG files or explicitly paste an image. Managed copies remain available if the source moves. See the [image library guide (Chinese)](docs/ASSET_LIBRARY.md). The font and color screenshots below show the refreshed interface.
 
 <details>
 <summary>Font workspace example: groups, tags and comparison</summary>
@@ -52,9 +58,9 @@ This version organizes system-available fonts. Uninstalled font folders and syst
 <details>
 <summary>Color module example: floating swatches, favorites and export</summary>
 
-![Actual color-module workflow: float, choose a format, copy, favorite, export](assets/demo/palette-demo.gif)
+![Color workspace with original swatch colors](assets/demo/palette-workspace.png)
 
-Actual UI states with isolated sample data in a short looping sequence. This demo covers the color module.
+Actual Windows UI with isolated sample data. Color tools are one part of the wider toolbox.
 
 Copy HEX with or without `#`, lowercase HEX, RGB, numeric RGB or HSL, plus entire palettes and CSS variables. Name, favorite, filter and reorder colors; undo the last 20 changes during the current session. Favorites, order, palette selection and copy format persist.
 
@@ -101,7 +107,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 122 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation and independent restore. Tests do not replace validation in real creative applications.
+There are 130 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 

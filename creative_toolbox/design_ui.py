@@ -118,6 +118,7 @@ class PalettePage(QWidget):
         self.grid = QGridLayout(self.cards)
         self.grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         area.setWidget(self.cards)
+        self.cards.setAutoFillBackground(False)
         layout.addWidget(area, 1)
         self.name = QLineEdit()
         self.name.setAccessibleName('颜色名称（可选）')

@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, QUrl, QSize
-from PySide6.QtGui import QColor, QDesktopServices, QFont, QIcon, QPainter, QPixmap, QAction, QShortcut, QKeySequence
+from PySide6.QtGui import QDesktopServices, QFont, QIcon, QAction, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
     QFormLayout, QFrame, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow,
@@ -25,65 +25,8 @@ from .core import Profile, resolve_shortcut
 from .storage import Settings, Store
 
 
-STYLE = """
-QWidget { color: #233a34; font-size: 13px; }
-QMainWindow, QDialog { background: #f4f6f3; }
-QWidget#sidebar { background: #1c302b; }
-QWidget#sidebar QLabel { color: #a9bcb4; background: transparent; }
-QWidget#sidebar QLabel#brand { color: #f4f7f3; font-size: 21px; font-weight: 700; }
-QWidget#sidebar QPushButton { border: none; text-align: left; padding: 13px 18px;
-    background: transparent; color: #b7c9bf; border-radius: 8px; font-size: 14px; }
-QWidget#sidebar QPushButton:checked { color: #fff; background: #365147; }
-QWidget#sidebar QPushButton:hover { background: #2a4439; }
-QLabel#title { font-size: 29px; font-weight: 700; color: #203c31; }
-QLabel#eyebrow { color: #628170; font-size: 11px; font-weight: 600; }
-QLabel#muted { color: #596b61; }
-QLabel#section { font-size: 16px; font-weight: 700; }
-QFrame#card { background: #ffffff; border: 1px solid #e0e7df; border-radius: 14px; }
-QFrame#hero { background: #e6eee4; border: 1px solid #d7e3d4; border-radius: 16px; }
-QLabel#heroTitle { font-size: 24px; font-weight: 700; color: #294f3d; }
-QLabel#metric { font-size: 30px; font-weight: 700; color: #2a4b3b; }
-QLabel#badge { background: #edf1e9; color: #497055; padding: 6px 12px; border-radius: 10px; }
-QPushButton { background: #ffffff; color: #2c4a3b; border: 1px solid #d7e0d5;
-    border-radius: 7px; padding: 9px 14px; font-weight: 600; }
-QPushButton:hover { background: #edf2e9; border-color: #aabfa7; }
-QPushButton:pressed { background: #dfe9d9; }
-QPushButton:checked { background: #e2eddf; border-color: #88a584; }
-QPushButton:focus { border: 2px solid #355e46; padding: 8px 13px; }
-QWidget#sidebar QPushButton:focus { border: 2px solid #b3cf9c; padding: 11px 16px; }
-QPushButton#secondary { background: transparent; border-color: transparent; font-weight: 400; }
-QPushButton#secondary:hover { background: #e2eddf; border-color: #aabfa7; }
-QPushButton#secondary:focus { border-color: #355e46; }
-QPushButton:disabled { color: #9ca79e; background: #f1f3ef; border-color: #e4e9e1; }
-QPushButton#primary { background: #355e46; color: white; border: 1px solid #355e46; }
-QPushButton#primary:focus { border: 2px solid #172d23; }
-QPushButton#primary:hover { background: #447755; }
-QPushButton#primary:disabled { background: #e4e9e1; color: #8c998f; }
-QPushButton#danger { color: #9a5442; }
-QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QPlainTextEdit { background: white; border: 1px solid #d5dfd1;
-    border-radius: 6px; padding: 8px; min-height: 19px; selection-background-color: #426e50; }
-QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QPlainTextEdit:focus { border: 2px solid #355e46; padding: 7px; }
-QComboBox QAbstractItemView { background: white; selection-background-color: #e2eddf;
-    selection-color: #233a34; padding: 4px; }
-QCheckBox { spacing: 8px; }
-QCheckBox::indicator { width: 17px; height: 17px; }
-QTableWidget { background: white; border: 1px solid #e0e7df; border-radius: 10px;
-    gridline-color: #edf0ea; selection-background-color: #e7efdf; selection-color: #233a34; }
-QHeaderView::section { background: #f0f4ed; color: #667b69; border: none;
-    padding: 12px 8px; font-weight: 600; }
-QTableWidget::item { padding: 8px; border-bottom: 1px solid #eef1eb; }
-QScrollArea { border: none; background: transparent; }
-QScrollBar:vertical { background: transparent; width: 9px; }
-QScrollBar::handle:vertical { background: #c7d3c3; border-radius: 4px; min-height: 24px; }
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-QMenu { background: #fff; border: 1px solid #d5dfd1; padding: 6px; }
-QMenu::item { padding: 8px 22px; }
-QMenu::item:selected { background: #e7efdf; }
-QTabWidget::pane { border: 1px solid #e0e7df; background: #f4f6f3; border-radius: 8px; }
-QTabBar::tab { padding: 10px 18px; background: #e6eee4; color: #355e46; }
-QTabBar::tab:selected { background: #355e46; color: white; }
-QToolTip { background: #203c31; color: white; padding: 6px; border: none; }
-"""
+from .theme import STYLE, WorkspaceCanvas, GlassPanel, application_icon, icon
+from .appearance import AppearanceStore
 
 
 def label(text: str, name: str = "", wrap: bool = False) -> QLabel:
@@ -112,20 +55,7 @@ def panel(name="card") -> tuple[QFrame, QVBoxLayout]:
 
 
 def app_icon() -> QIcon:
-    pixmap = QPixmap(64, 64)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor("#355e46"))
-    painter.drawRoundedRect(0, 0, 64, 64, 16, 16)
-    painter.setBrush(QColor("#e9edc8"))
-    painter.drawRoundedRect(15, 15, 14, 34, 5, 5)
-    painter.drawRoundedRect(35, 15, 14, 14, 5, 5)
-    painter.setBrush(QColor("#b3cf9c"))
-    painter.drawRoundedRect(35, 35, 14, 14, 5, 5)
-    painter.end()
-    return QIcon(pixmap)
+    return application_icon()
 
 
 def style_combo(platform: str, inherit=False) -> QComboBox:
@@ -299,56 +229,65 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(app_icon())
         self.resize(1180, 800)
         self.setMinimumSize(1020, 720)
-        central = QWidget()
+        self.appearance = AppearanceStore(store.root / "appearance.json")
+        central = WorkspaceCanvas(self.appearance.reduced)
+        self.canvas = central
         root = QHBoxLayout(central)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        root.setContentsMargins(12, 12, 12, 12)
+        root.setSpacing(20)
         self.setCentralWidget(central)
-        sidebar = QWidget()
+        sidebar = GlassPanel(self.appearance.reduced)
+        self.sidebar_material = sidebar
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(204)
+        sidebar.setFixedWidth(190)
         side = QVBoxLayout(sidebar)
-        side.setContentsMargins(20, 30, 20, 22)
+        side.setContentsMargins(14, 22, 14, 18)
         side.setSpacing(8)
         logo = label("")
-        logo.setPixmap(app_icon().pixmap(42, 42))
+        logo.setPixmap(app_icon().pixmap(54, 54))
         side.addWidget(logo)
         side.addSpacing(10)
         side.addWidget(label("创作工具箱", "brand"))
         side.addWidget(label("CREATIVE TOOLBOX"))
-        side.addSpacing(35)
+        side.addSpacing(24)
         side.addWidget(label("工作空间"))
         self.nav = {}
         for key, name in (("home", "首页"), ("library", "资源库"), ("tools", "工具")):
             nav = button(name, lambda checked=False, route=key: self.navigate(route))
             nav.setCheckable(True)
+            nav.setIcon(icon(key))
+            nav.setIconSize(QSize(20, 20))
             side.addWidget(nav)
             self.nav[key] = nav
         side.addStretch()
         for key, name in (("protection", "创作保护"), ("settings", "设置"), ("help", "帮助")):
             nav = button(name, lambda checked=False, route=key: self.navigate(route))
             nav.setCheckable(True)
+            nav.setIcon(icon(key))
+            nav.setIconSize(QSize(20, 20))
             side.addWidget(nav)
             self.nav[key] = nav
         side.addWidget(label("留住每一次灵感。"))
         side.addWidget(label(f"本地运行  /  v{__version__}"))
         root.addWidget(sidebar)
         content = QVBoxLayout()
-        content.setContentsMargins(32, 25, 32, 16)
+        content.setContentsMargins(0, 0, 12, 4)
         content.setSpacing(18)
-        top = QHBoxLayout()
-        self.breadcrumb = label("WORKSPACE  /  首页", "eyebrow")
+        self.top_material = GlassPanel(self.appearance.reduced, radius=16)
+        top = QHBoxLayout(self.top_material)
+        top.setContentsMargins(16, 8, 12, 8)
+        self.breadcrumb = label("工作空间  /  首页", "eyebrow")
         top.addWidget(self.breadcrumb)
         top.addStretch()
         help_action = button("本页帮助", lambda: self.open_help())
         help_action.setObjectName("secondary")
         help_action.setToolTip("查看当前功能说明 · F1")
         top.addWidget(help_action)
-        top.addWidget(label(backend.label, "muted"))
+        self.top_material.setToolTip(backend.label)
         self.mode_badge = button("●  观察模式", lambda: self.navigate("protection"))
         self.mode_badge.setToolTip("打开创作保护，查看状态或暂停")
         top.addWidget(self.mode_badge)
-        content.addLayout(top)
+        content.addWidget(self.top_material)
         self.protection_tabs = QWidget()
         tabs = QHBoxLayout(self.protection_tabs)
         tabs.setContentsMargins(0, 0, 0, 0)
@@ -408,6 +347,7 @@ class MainWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(page)
+        page.setAutoFillBackground(False)
         self.pages.addWidget(scroll)
         return layout
 
@@ -539,6 +479,17 @@ class MainWindow(QMainWindow):
         col.addWidget(label("自动：Windows 使用 Ctrl+S，macOS 使用 ⌘+S。\n切换只改变发送的组合键，不会修改创作软件本身的快捷键。", "muted", True))
         col.addWidget(button("保存偏好设置", self.save_preferences, True), 0, Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(card)
+        appearance, appearance_layout = panel()
+        appearance_layout.addWidget(label("外观", "section"))
+        appearance_layout.addWidget(label("冷白与钴蓝 · 清晰的内容区，轻盈的导航层。", "muted", True))
+        self.reduce_transparency = QCheckBox("减少透明效果")
+        self.reduce_transparency.setChecked(self.appearance.reduced)
+        self.reduce_transparency.setToolTip("将导航与顶部栏切换为不透明表面，立即生效。")
+        self.reduce_transparency.toggled.connect(self.change_appearance)
+        appearance_layout.addWidget(self.reduce_transparency)
+        self.appearance_notice = label(self.appearance.warning or "修改后立即生效，并在本机记住。", "muted", True)
+        appearance_layout.addWidget(self.appearance_notice)
+        layout.addWidget(appearance)
         local, local_layout = panel()
         local_layout.addWidget(label("本地运行，随时可控", "section"))
         local_layout.addWidget(label("每次启动从观察模式开始。关闭窗口后可继续在系统托盘运行；在托盘菜单中选择「退出」即可停止。\n此初版尚未实现版本备份、云同步或软件内部工作状态适配。", "muted", True))
@@ -548,6 +499,16 @@ class MainWindow(QMainWindow):
             local_layout.addWidget(button("打开 macOS 输入监控设置", lambda: QDesktopServices.openUrl(QUrl("x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"))))
         layout.addWidget(local)
         layout.addStretch()
+
+    def change_appearance(self, reduced):
+        for surface in (self.canvas, self.sidebar_material, self.top_material):
+            surface.reduced = reduced
+            surface.update()
+        try:
+            saved = self.appearance.save(reduced)
+            self.appearance_notice.setText("外观已保存。" if saved else self.appearance.warning)
+        except OSError:
+            self.appearance_notice.setText("已应用到本次窗口，但未能保存。请检查数据目录的写入权限。")
 
     def update_global_custom(self):
         active = self.global_style.currentData() == "custom"
@@ -574,8 +535,10 @@ class MainWindow(QMainWindow):
             self.help_topic = {"home": "start", "library": "assets", "tools": "start"}.get(route, route)
         for key, nav in self.nav.items():
             nav.setChecked(key == route)
+            if key != route and nav.hasFocus():
+                nav.clearFocus()
         self.protection_tabs.setVisible(route == "protection")
-        self.breadcrumb.setText("WORKSPACE  /  " + title)
+        self.breadcrumb.setText("工作空间  /  " + title)
 
     def navigate(self, route):
         if route == "help":

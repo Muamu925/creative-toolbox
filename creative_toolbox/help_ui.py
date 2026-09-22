@@ -1,6 +1,7 @@
 """Offline task-based help. No network, disk indexing, or external-app actions."""
 from dataclasses import dataclass
 from html import escape
+from .theme import TOKENS
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QTextBrowser, QPushButton, QSplitter
 
@@ -63,6 +64,7 @@ TOPICS = (
         ("分享前检查", "图片备份包含原始图片、备注、来源和原始本地路径；配色 JSON 包含来源标识和提色时的图片名称。分享前请检查这些内容。"),
     )),
     Topic("settings", "窗口、设置与常见问题", "处理运行、数据和反馈问题。", "", (
+        ("如何减少透明效果？", "在设置的「外观」中开启「减少透明效果」，导航和顶部栏会立即变为不透明表面。选择保存在本机。玻璃外观是工具箱内绘制的近似效果，不会读取或模糊桌面内容。"),
         ("关闭窗口后还在运行", "有系统托盘时，这是正常行为，方便后台观察与悬浮工具使用。从托盘重新打开或选择退出。"),
         ("工具页加载失败", "先重试该工具，并检查应用数据目录是否可写、磁盘空间是否充足。损坏或未来版本的数据不会被示例内容覆盖；先备份原文件再处理。"),
         ("主窗口能用，保护不可用", "系统保存适配失败时会禁用保护操作，图片、字体、配色和换算仍可使用。帮助入口也保持可用。"),
@@ -156,7 +158,7 @@ class HelpPage(QWidget):
         parts = [f"<h1>{escape(topic.title)}</h1><p>{escape(topic.summary)}</p>"]
         for heading, text in topic.sections:
             parts.append(f"<h2>{escape(heading)}</h2><p>{escape(text).replace(chr(10), '<br>')}</p>")
-        self.article.setHtml("<html><head><style>body{color:#233a34;font-size:14px;} h1{font-size:24px;color:#203c31;} h2{font-size:17px;margin-top:22px;} p{line-height:150%;}</style></head><body>" + "".join(parts) + "</body></html>")
+        self.article.setHtml("<html><head><style>body{color:INK;font-size:14px;} h1{font-size:24px;color:INK;} h2{font-size:17px;margin-top:22px;} p{line-height:150%;}</style></head><body>".replace("INK", TOKENS["ink"]) + "".join(parts) + "</body></html>")
         self.article.verticalScrollBar().setValue(0)
         words = self.search.text().strip().split()
         if words:
