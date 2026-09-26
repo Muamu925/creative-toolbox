@@ -134,6 +134,27 @@ class AssetStore:
             self.db.close()
             raise
 
+    @classmethod
+    def open_readonly(cls, root):
+        """Inspect/export an existing library without migration or directory creation."""
+        store = cls.__new__(cls)
+        store.root = Path(root)
+        store.path = store.root / 'library.sqlite3'
+        store.db = sqlite3.connect(store.path.resolve().as_uri() + '?mode=ro', uri=True, timeout=10)
+        store.db.row_factory = sqlite3.Row
+        try:
+            if store.db.execute('PRAGMA user_version').fetchone()[0] not in (1, 2):
+                raise ValueError('不支持的素材库版本')
+            if store.db.execute('PRAGMA quick_check').fetchone()[0] != 'ok' or store.db.execute('PRAGMA foreign_key_check').fetchall():
+                raise ValueError('素材库索引校验失败')
+            store.library_id = store.db.execute("SELECT value FROM meta WHERE key='library_id'").fetchone()[0]
+            if not re.fullmatch(r'[0-9a-f]{32}', store.library_id):
+                raise ValueError('素材库标识无效')
+        except Exception:
+            store.db.close()
+            raise
+        return store
+
     def close(self):
         self.db.close()
 
@@ -340,7 +361,7 @@ class AssetStore:
         os.close(fd)
         stage = Path(temp)
         try:
-            with tempfile.TemporaryDirectory(dir=self.root / "staging") as directory:
+            with tempfile.TemporaryDirectory(dir=output.parent) as directory:
                 snapshot = Path(directory) / "library.sqlite3"
                 target = sqlite3.connect(snapshot)
                 try:

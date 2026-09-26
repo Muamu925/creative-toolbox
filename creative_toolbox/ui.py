@@ -219,6 +219,7 @@ class MainWindow(QMainWindow):
         self.controller = Controller(backend, settings, self.on_event)
         self.events: list[tuple[str, Event]] = []
         self.quitting = False
+        self.backup_busy = False
         self.capture_seconds = 0
         self.protection_available = getattr(backend, "available", True)
         self.protection_reason = getattr(backend, "unavailable_reason", "")
@@ -315,6 +316,14 @@ class MainWindow(QMainWindow):
             page.favorite_requested.connect(self.toggle_tool_favorite)
             page.directory_requested.connect(lambda: self.navigate("tools"))
             page.help_requested.connect(lambda: self.open_help("start"))
+            if kind == "library":
+                from .resource_ui import ResourceSearch, run_backup
+                self.resource_search = ResourceSearch(self.store.root, page)
+                self.resource_search.open_requested.connect(self.open_resource)
+                self.resource_search.backup_requested.connect(lambda restore: run_backup(self, restore))
+                page.layout().insertWidget(3, self.resource_search)
+                self.resource_search.query_active.connect(lambda active, target=page: (
+                    target.scroll.setVisible(not active), target.layout().setStretch(3, int(active))))
             self.pages.addWidget(page)
             self.entry_pages[kind] = page
         bottom = QHBoxLayout()
@@ -543,7 +552,7 @@ class MainWindow(QMainWindow):
 
     def mark_route(self, route, title):
         if route != "help":
-            self.help_topic = {"home": "start", "library": "assets", "tools": "start"}.get(route, route)
+            self.help_topic = {"home": "start", "library": "library", "tools": "start"}.get(route, route)
         for key, nav in self.nav.items():
             nav.setChecked(key == route)
             if key != route and nav.hasFocus():
@@ -553,6 +562,8 @@ class MainWindow(QMainWindow):
         self.breadcrumb.setText("工作空间  /  " + title)
 
     def navigate(self, route):
+        if self.backup_busy:
+            return
         if route == "help":
             self.open_help("start")
         elif route == "protection":
@@ -561,6 +572,8 @@ class MainWindow(QMainWindow):
             self.switch_page(3)
         elif route in self.entry_pages:
             self.entry_pages[route].refresh()
+            if route == "library":
+                self.resource_search.refresh()
             self.pages.setCurrentWidget(self.entry_pages[route])
             self.mark_route(route, {"home": "首页", "library": "资源库", "tools": "工具"}[route])
 
@@ -589,6 +602,8 @@ class MainWindow(QMainWindow):
         return self.ensure_tool("fonts")
 
     def open_tool(self, tool_id):
+        if self.backup_busy:
+            return
         if tool_id not in TOOL_BY_ID:
             return
         try:
@@ -604,6 +619,30 @@ class MainWindow(QMainWindow):
         if tool_id == "protection":
             self.select_protection_tab(0)
         self.remember_tool(tool_id)
+
+    def open_resource(self, result):
+        from .resources_search import fingerprint
+        try:
+            kind, reference = result['kind'], result['reference']
+            page = self.ensure_tool(kind)
+            if kind == 'assets':
+                if not page.show_source(reference):
+                    return
+            elif kind == 'palettes':
+                palettes = page.model.library['palettes']
+                index = reference['index']
+                if not (0 <= index < len(palettes) and fingerprint(palettes[index]) == reference['fingerprint']):
+                    matches = [i for i, palette in enumerate(palettes) if fingerprint(palette) == reference['fingerprint']]
+                    if len(matches) != 1:
+                        raise ValueError('色板已更改，请重新搜索')
+                    index = matches[0]
+                if not page.model.set_preferences(selected=index):
+                    raise ValueError('未能选中色板，请检查色板页的保存提示')
+            elif kind == 'fonts':
+                page.show_family(reference)
+            self.open_tool(kind)
+        except Exception as exc:
+            QMessageBox.warning(self, '资料暂未打开', str(exc))
 
     def open_help(self, topic=None):
         if self.help_page is None:
@@ -657,6 +696,8 @@ class MainWindow(QMainWindow):
         self.refresh_entries()
 
     def open_floating_palette(self):
+        if self.backup_busy:
+            return
         try:
             self.palette_page.open_floating()
         except Exception as exc:
@@ -696,10 +737,13 @@ class MainWindow(QMainWindow):
                 event.ignore()
 
     def quit_app(self):
+        if self.backup_busy:
+            return
         assets = self.tool_pages.get("assets")
         if not self.quitting and assets and not assets.can_exit():
             return
         self.quitting = True
+        self.resource_search.shutdown()
         self.timer.stop()
         self.pages.finish_transition()
         self.nav_motion.stop()
@@ -721,6 +765,8 @@ class MainWindow(QMainWindow):
         self.update_mode()
 
     def toggle_automatic(self):
+        if self.backup_busy:
+            return
         if not self.protection_available:
             return
         if self.controller.automatic:

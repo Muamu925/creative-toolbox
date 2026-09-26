@@ -62,6 +62,7 @@ class WorkspacePage(QWidget):
             guide.clicked.connect(self.help_requested.emit)
             root.addWidget(guide, 0, Qt.AlignmentFlag.AlignLeft)
         scroll = QScrollArea()
+        self.scroll = scroll
         scroll.setWidgetResizable(True)
         self.body = QWidget()
         self.rows = QVBoxLayout(self.body)

@@ -296,6 +296,21 @@ class FontPage(QWidget):
         self.populate_groups()
         QApplication.instance().aboutToQuit.connect(self.flush_preferences)
 
+    def show_family(self, family):
+        if family not in self.model.families:
+            raise ValueError('字体整理记录已更改，请重新搜索')
+        self.search.clear()
+        self.system.setCurrentIndex(0)
+        self.mono.setChecked(False)
+        self.populate_groups('all')
+        source = self.model.index(self.model.families.index(family), 0)
+        target = self.proxy.mapFromSource(source)
+        if not target.isValid():
+            raise ValueError('字体暂未显示，请刷新字体列表')
+        self.list.setCurrentIndex(target)
+        self.list.scrollTo(target)
+        self.tabs.setCurrentIndex(0)
+
     def selected(self):
         return [i.data(Qt.ItemDataRole.UserRole) for i in self.list.selectionModel().selectedIndexes()]
 

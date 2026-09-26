@@ -26,7 +26,14 @@ def main() -> int:
     app.setFont(font)
     app.setStyleSheet(STYLE)
     app.setWindowIcon(app_icon())
-    store = Store(args.data_dir or data_directory(), sys.platform)
+    from .workspace_backup import resolve_workspace
+    launch_root = args.data_dir or data_directory()
+    try:
+        active_root = resolve_workspace(launch_root)
+    except Exception as exc:
+        QMessageBox.warning(None, "资料暂未打开", str(exc) + "\n请检查数据目录中的 active-workspace.json；原资料未改动。")
+        return 1
+    store = Store(active_root, sys.platform)
     store.root.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(store.root / "instance.lock"))
     lock.setStaleLockTime(0)
@@ -35,6 +42,7 @@ def main() -> int:
         return 0
     backend = load_backend()
     window = MainWindow(backend, store, store.load())
+    window.launch_root = launch_root
     window.show()
     if args.screenshot:
         def capture():

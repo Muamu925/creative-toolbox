@@ -4,15 +4,15 @@
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.7.1 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
+**Version 0.8.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.7.1 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.7.1/CreativeToolbox-0.7.1-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.7.1) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.8.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.8.0/CreativeToolbox-0.8.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.8.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
-## Interaction improvements in 0.7.1
+## New in 0.8.0
 
-Brief page transitions, a moving navigation indicator, and confirmation toasts after successful actions. **Reduce motion** in Settings disables animations while keeping feedback visible. Page titles and actions use shorter, task-oriented wording.
+Search saved images, palettes and font metadata together, then open the selected resource in its original tool. Create a full workspace backup and restore it into a validated new directory. Reopen the app after switching; the previous data stays available.
 
-![Actual application: navigation, copy feedback and reduced motion](assets/demo/interaction-demo.gif)
+![Unified resource search with isolated sample data](assets/demo/resource-search.png)
 
 ## A unified workspace
 
@@ -113,7 +113,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 140 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
+There are 156 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
@@ -123,3 +123,8 @@ If this tool saves you a few app switches, a Star helps you find it again. Feedb
 
 Project code is licensed under [MIT](LICENSE). Bundled third-party components, including Python and Qt / PySide6, retain their own licenses; their license files are included in the downloads.
 
+
+
+## Resource search and full backups (0.8.0)
+
+Search saved image, palette and font metadata together from Library, then open the exact item in its existing tool. Full `.ctbackup` archives include the active image library, palette and font metadata, and saved settings. Restore validates into a new directory before offering a switch; reopen the app after switching. System font files, unsaved edits, activity logs and previous restore directories are excluded. Search does not scan the whole disk or enumerate unorganized system fonts.
