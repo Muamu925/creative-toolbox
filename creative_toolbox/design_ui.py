@@ -206,7 +206,7 @@ class PalettePage(QWidget):
         colors = self.current()['colors']
         displayed = [(i, c) for i, c in enumerate(colors) if not self.favorites_only.isChecked() or c.get('favorite', False)]
         if not displayed:
-            hint = '还没有收藏。取消筛选后，点颜色下方的「收藏」。' if self.favorites_only.isChecked() else '在下方输入色号，添加第一个颜色。'
+            hint = '暂无收藏颜色。请取消筛选，并在所需颜色下方选择「收藏」。' if self.favorites_only.isChecked() else '当前色板为空。请在下方输入色号并添加颜色。'
             self.grid.addWidget(text(hint, 'muted'), 0, 0, 1, 3)
         for position, (i, color) in enumerate(displayed):
             card = QFrame()
@@ -417,7 +417,7 @@ class PalettePage(QWidget):
         row.addWidget(text('背景 HEX'))
         row.addWidget(self.background)
         layout.addLayout(row)
-        self.contrast_preview = text('Aa  创作，让灵感被看见。\nDesign with clarity.')
+        self.contrast_preview = text('Aa  文字对比度预览\nDesign with clarity.')
         self.contrast_preview.setMinimumHeight(160)
         layout.addWidget(self.contrast_preview)
         self.contrast_result = text('')

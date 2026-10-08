@@ -25,6 +25,10 @@ if sys.platform == "win32" and icon.exists():
 if sys.platform == "darwin":
     args += ["--osx-bundle-identifier", "org.creativetoolbox.desktop", "--icon", str(ROOT / "assets" / "toolbox.icns")]
 args += ["run.py"]
+if sys.platform == "darwin":
+    args = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
+            "--distpath", "dist", "--workpath", "build/work-mac",
+            str(ROOT / "tools" / "CreativeToolbox-macOS.spec")]
 subprocess.run(args, check=True)
 if sys.platform == "win32":
     # Qt 6.11 uses the Windows system ICU's unversioned exports. Some Python
@@ -47,6 +51,7 @@ if sys.platform == "darwin":
         staging = Path(temporary)
         shutil.copytree(ROOT / "dist" / "CreativeToolbox.app", staging / "CreativeToolbox.app", symlinks=True)
         copy_distribution_docs(staging)
+        (staging / "Applications").symlink_to("/Applications", target_is_directory=True)
         subprocess.run(["hdiutil", "create", "-volname", "Creative Toolbox", "-srcfolder",
                         str(staging), "-ov", "-format", "UDZO",
                         f"dist/CreativeToolbox-{version}-macOS-{platform.machine()}-unsigned.dmg"], check=True)

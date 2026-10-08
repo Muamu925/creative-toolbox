@@ -32,14 +32,14 @@ class ResourceSearch(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         row = QHBoxLayout()
         self.search = QLineEdit()
-        self.search.setPlaceholderText('搜索图片、色板、字体整理记录')
+        self.search.setPlaceholderText('搜索图片、色板、字体整理记录与项目')
         self.search.setAccessibleName('搜索个人资料')
         self.search.setClearButtonEnabled(True)
         self.search.setMaxLength(300)
         row.addWidget(self.search, 1)
         self.kind = QComboBox()
         self.kind.setAccessibleName('资源类型')
-        for title, key in [('全部资料', 'all'), ('图片', 'assets'), ('色板', 'palettes'), ('字体', 'fonts')]:
+        for title, key in [('全部资料', 'all'), ('图片', 'assets'), ('色板', 'palettes'), ('字体', 'fonts'), ('项目', 'projects')]:
             self.kind.addItem(title, key)
         row.addWidget(self.kind)
         layout.addLayout(row)
@@ -103,14 +103,14 @@ class ResourceSearch(QWidget):
             return
         results, warnings, counts = worker.result
         worker.deleteLater()
-        titles = {'assets': '图片', 'palettes': '色板', 'fonts': '字体'}
+        titles = {'assets': '图片', 'palettes': '色板', 'fonts': '字体', 'projects': '项目'}
         for result in results:
             detail = ' '.join(result['details'].split())[:100]
             item = QListWidgetItem(f"{titles[result['kind']]} · {result['title']}\n{detail or '已保存的资料'}")
             item.setData(Qt.ItemDataRole.UserRole, result)
             self.results.addItem(item)
         total = sum(counts.values())
-        message = f'找到 {total} 条资料' if total else '没有找到，试试名称、标签或色号。'
+        message = f'找到 {total} 条资料' if total else '没有找到匹配资料。请按名称、标签或色号搜索。'
         if total > len(results):
             message += ' · 每类显示前 100 条，请缩小搜索范围'
         self.status.setText(message + ('\n' + '\n'.join(warnings) if warnings else ''))
@@ -177,6 +177,9 @@ class BackupProgress(QDialog):
 def run_backup(window, restore=False):
     if getattr(window, 'backup_busy', False):
         return
+    projects = window.tool_pages.get('projects')
+    if projects and not projects.confirm_details():
+        return
     assets = window.tool_pages.get('assets')
     if assets and assets.worker:
         QMessageBox.information(window, '素材正在处理', '请等待当前素材任务结束，再备份或恢复。')
@@ -202,7 +205,7 @@ def run_backup(window, restore=False):
             return
     if QMessageBox.question(window, '恢复资料' if restore else '备份已保存的资料',
         '备份将在新目录中恢复并校验，完成后可切换使用。现有资料会保留。' if restore else
-        '包含图片原件、集合、色板、字体整理和已保存设置；不含系统字体文件、未保存编辑及活动日志。处理期间暂停编辑。',
+        '包含项目规格与资源副本、图片原件、集合、色板、字体整理和已保存设置；不含系统字体文件、未保存编辑及活动日志。处理期间暂停编辑。',
         QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
         QMessageBox.StandardButton.Ok) != QMessageBox.StandardButton.Ok:
         return

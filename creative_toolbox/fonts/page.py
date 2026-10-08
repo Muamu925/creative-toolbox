@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from ..theme import TOKENS
 from .library import FontLibrary, read_file, write_file
 
-SAMPLE = "创作，让灵感被看见。\nThe quick brown fox jumps over the lazy dog.\n0123456789  Aa Bb Cc"
+SAMPLE = "中文字体排印示例。\nThe quick brown fox jumps over the lazy dog.\n0123456789  Aa Bb Cc"
 
 
 def label(value, name=""):
@@ -457,7 +457,7 @@ class FontPage(QWidget):
         form.addRow("别名", alias)
         form.addRow("来源 / 许可链接", source)
         form.addRow("用途与授权备注", note)
-        form.addRow(label("备注由你填写；工具箱不会根据字体名判断商用授权。来源链接仅保存为文本。", "muted"))
+        form.addRow(label("备注支持手动填写；工具箱不依据字体名称判定商用授权。来源链接仅以文本形式保存。", "muted"))
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)

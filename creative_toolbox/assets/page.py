@@ -134,7 +134,7 @@ class AssetPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
         layout.addWidget(label("图片素材", "title"))
-        layout.addWidget(label("拖入或粘贴图片，稍后整理。支持 PNG / JPEG。", "muted"))
+        layout.addWidget(label("支持导入、拖放或粘贴 PNG / JPEG 图片。", "muted"))
         bar = QHBoxLayout()
         self.import_button = button("导入图片", self.choose_files, True)
         self.paste_button = button("粘贴图片", self.paste_image)
@@ -191,7 +191,7 @@ class AssetPage(QWidget):
         self.list.setWordWrap(False)
         self.list.setTextElideMode(Qt.TextElideMode.ElideRight)
         left_box.addWidget(self.list, 1)
-        self.empty = label("还没有素材。拖入图片或点击「导入图片」。", "muted")
+        self.empty = label("暂无图片素材。请拖入图片或选择「导入图片」。", "muted")
         left_box.addWidget(self.empty)
         pages = QHBoxLayout()
         self.previous = button("上一页", lambda: self.change_page(-1))
@@ -341,7 +341,7 @@ class AssetPage(QWidget):
         self.list.blockSignals(False)
         self.empty.setVisible(total == 0)
         self.empty.setText("没有符合条件的素材。调整搜索或范围。" if self.search.text() else
-                           ("回收站为空。" if self.scope.currentData() == "trash" else "还没有素材。拖入图片或点击「导入图片」。"))
+                           ("回收站为空。" if self.scope.currentData() == "trash" else "暂无图片素材。请拖入图片或选择「导入图片」。"))
         self.applied_filter = (self.search.text(), self.scope.currentData(), self.collection.currentData())
         self.count.setText(f"{total} 张 · 本页 {len(rows)} 张" + (f" · 第 {self.offset // self.PAGE_SIZE + 1} 页" if total else ""))
         self.previous.setEnabled(self.offset > 0 and not self.worker)
@@ -457,6 +457,14 @@ class AssetPage(QWidget):
         asset_id = self.current_id
         try:
             deleted = not self.store.get(asset_id)["deleted"]
+            if deleted:
+                from ..projects import image_projects
+                projects = image_projects(self.data_root, self.store.library_id, asset_id)
+                if projects and QMessageBox.question(self, "图片被项目引用",
+                        f"此图片被 {len(projects)} 个已保存项目引用。移入回收站后，项目将显示图片不可用；恢复素材后可继续使用。\n\n是否移入回收站？",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
+                    return
             self.store.set_deleted(asset_id, deleted)
             self.refresh()
             self.status.setText("已移到回收站，原件保留，可切换「回收站」恢复。" if deleted else "已恢复素材。")

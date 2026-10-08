@@ -29,9 +29,9 @@ class WorkspacePage(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(14)
         heading, subtitle = {
-            "home": ("继续创作", "常用工具和创作资料，都在这里。"),
+            "home": ("创作工作台", "集中管理创作资源，快速访问常用工具。"),
             "library": ("资源库", "整理图片、字体和色板。"),
-            "tools": ("所有工具", "选一个工具，直接开始。"),
+            "tools": ("所有工具", "浏览或搜索工具，选择所需功能。"),
         }[kind]
         root.addWidget(text(heading, "title"))
         root.addWidget(text(subtitle, "muted"))
@@ -42,7 +42,7 @@ class WorkspacePage(QWidget):
             self.search = QLineEdit()
             self.search.setAccessibleName("搜索工具")
             self.search.setClearButtonEnabled(True)
-            self.search.setPlaceholderText("试试：字体、尺寸、BPM")
+            self.search.setPlaceholderText("搜索工具，例如：字体、尺寸、BPM")
             self.search.textChanged.connect(self.refresh)
             root.addWidget(self.search)
         elif kind == "home":
@@ -122,7 +122,7 @@ class WorkspacePage(QWidget):
             for tool in favorites:
                 self.add_tool(tool, compact=True)
             if not favorites:
-                self.rows.addWidget(text("收藏工具后，会显示在这里。", "muted"))
+                self.rows.addWidget(text("暂无收藏工具。可在「全部工具」中添加收藏。", "muted"))
             self.rows.addWidget(text("最近使用", "section"))
             recent = [TOOL_BY_ID[item["id"]] for item in self.store.data["recent"] if item["id"] in TOOL_BY_ID]
             for tool in recent[:5]:
@@ -130,11 +130,11 @@ class WorkspacePage(QWidget):
                 action.clicked.connect(lambda checked=False, key=tool.id: self.open_requested.emit(key))
                 self.rows.addWidget(action)
             if not recent:
-                self.rows.addWidget(text("打开过的工具会显示在这里。", "muted"))
+                self.rows.addWidget(text("暂无使用记录。已打开的工具将显示在此列表中。", "muted"))
         else:
             matches = search_tools(self.search.text()) if self.kind == "tools" else [tool for tool in TOOLS if tool.area == "library"]
             for tool in matches:
                 self.add_tool(tool)
             if not matches:
-                self.rows.addWidget(text("没有找到，换个关键词试试。", "muted"))
+                self.rows.addWidget(text("未找到匹配工具。请调整搜索关键词。", "muted"))
         self.rows.addStretch()

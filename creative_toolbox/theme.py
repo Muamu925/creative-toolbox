@@ -3,6 +3,7 @@
 The material is an in-app approximation; it does not capture or blur the desktop.
 Content surfaces stay opaque. No timers or animation are needed to paint it.
 """
+import sys
 from pathlib import Path
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QColor, QIcon, QPainter, QLinearGradient, QRadialGradient
@@ -14,11 +15,15 @@ TOKENS = {
     "accent_pressed": "#173D91", "tint": "#EAF0FD", "line": "#DDE3EE",
     "hover": "#F0F3FA", "disabled": "#798394", "danger": "#A33A35",
 }
+IS_MAC = sys.platform == "darwin"
+if IS_MAC:
+    TOKENS.update(canvas="#F7F7F9", ink="#202124", muted="#62636B",
+                  line="#E1E1E6", tint="#E7EEFB", hover="#F0F0F4")
 RESOURCES = Path(__file__).parent / "resources"
 
 
 def icon(name):
-    return QIcon(str(RESOURCES / f"{name}.png"))
+    return QIcon(str(RESOURCES / f"{'library' if name == 'projects' else name}.png"))
 
 
 def application_icon():
@@ -130,6 +135,31 @@ QCheckBox::indicator:checked:disabled { background: @disabled; }
 QCheckBox::indicator:focus { border: 2px solid @accent; width: 15px; height: 15px; }
 QToolTip { background: @ink; color: white; padding: 7px; border: none; }
 """
+if IS_MAC:
+    _QSS += """
+    QWidget#sidebar QLabel#brand { font-size: 16px; font-weight: 600; }
+    QWidget#sidebar QPushButton { font-size: 13px; padding: 8px 10px; border-radius: 7px; }
+    QWidget#sidebar QPushButton:focus { padding: 7px 9px; }
+    QWidget#sidebar QLabel#eyebrow { font-size: 11px; color: #71717A; padding-left: 10px; }
+    QFrame#navSelection { background: #DDE6F5; border: none; border-radius: 7px; }
+    QLabel#title { font-size: 25px; font-weight: 600; }
+    QLabel#section { font-size: 15px; font-weight: 600; }
+    QLabel#macWelcome { font-size: 29px; font-weight: 600; }
+    QLabel#eyebrow { font-size: 13px; color: @ink; }
+    QFrame#card, QFrame#toolRow { border-radius: 10px; }
+    QFrame#macToolCard { background: @surface; border: 1px solid @line; border-radius: 12px; }
+    QFrame#macCapture { background: #EBEFF6; border: 1px solid #DFE5F0; border-radius: 12px; }
+    QPushButton { padding: 6px 12px; border-radius: 7px; font-weight: 500; }
+    QPushButton:focus { padding: 5px 11px; }
+    QPushButton#macSearch { color: @muted; background: #ECECF0; border: 1px solid #E2E2E7;
+        min-width: 160px; text-align: left; font-weight: 400; }
+    QPushButton#macRecent { text-align: left; padding: 10px 14px; font-weight: 400; }
+    QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QPlainTextEdit { border-radius: 7px; }
+    QHeaderView::section { background: #F4F4F6; padding: 10px 8px; }
+    QTabBar::tab { border-radius: 7px; padding: 7px 14px; }
+    QScrollBar::handle:vertical, QScrollBar::handle:horizontal { background: #BCBCC3; }
+    QWidget#macHome { background: transparent; }
+    """
 STYLE = _QSS.replace("RESOURCE", RESOURCES.as_posix())
 for _name, _value in sorted(TOKENS.items(), key=lambda item: -len(item[0])):
     STYLE = STYLE.replace('@' + _name, _value)
@@ -143,7 +173,7 @@ class WorkspaceCanvas(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor(TOKENS['canvas']))
-        if not self.reduced:
+        if not self.reduced and not IS_MAC:
             glow = QRadialGradient(80, 0, max(500, self.height()))
             glow.setColorAt(0, QColor('#DFE8FB'))
             glow.setColorAt(1, QColor(TOKENS['canvas']))
@@ -160,6 +190,10 @@ class GlassPanel(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = QRectF(self.rect()).adjusted(1, 1, -1, -1)
+        if IS_MAC:
+            painter.fillRect(self.rect(), QColor("#ECECF0" if self.objectName() == "sidebar" else TOKENS["canvas"]))
+            painter.end()
+            return
         if self.reduced:
             painter.setBrush(QColor(TOKENS['surface']))
             painter.setPen(QColor(TOKENS['line']))

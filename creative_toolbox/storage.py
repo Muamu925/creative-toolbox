@@ -22,7 +22,8 @@ def presets(platform: str) -> list[Profile]:
             ("resolve", "DaVinci Resolve", "Resolve.exe", "com.blackmagic-design.DaVinciResolve", True),
             ("cubase", "Cubase", "Cubase15.exe", "com.steinberg.cubase15", True)]
     return [Profile(i, n, mac if platform == "darwin" else win, platform,
-                    enabled=False, reminder_only=reminder) for i, n, win, mac, reminder in rows]
+                    enabled=False, reminder_only=reminder,
+                    custom="Cmd+S" if platform == "darwin" else "Ctrl+S") for i, n, win, mac, reminder in rows]
 
 
 @dataclass
@@ -40,7 +41,7 @@ class Store:
 
     def load(self) -> Settings:
         if not self.path.exists():
-            return Settings(presets(self.platform))
+            return Settings(presets(self.platform), custom="Cmd+S" if self.platform == "darwin" else "Ctrl+S")
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
             if raw.get("schema") != 1:
@@ -55,7 +56,7 @@ class Store:
             return settings
         except (ValueError, KeyError, TypeError, OSError) as exc:
             self.warning = f"配置未载入：{exc}。原文件保留，保存设置后将替换。"
-            return Settings(presets(self.platform))
+            return Settings(presets(self.platform), custom="Cmd+S" if self.platform == "darwin" else "Ctrl+S")
 
     def save(self, settings: Settings) -> None:
         for profile in settings.profiles:

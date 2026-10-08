@@ -124,7 +124,7 @@ class ProfileDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(26, 24, 26, 24)
         layout.setSpacing(16)
-        layout.addWidget(label("为你的应用设置规则", "section"))
+        layout.addWidget(label("应用保护规则配置", "section"))
         layout.addWidget(label("通过程序身份匹配，不依赖窗口标题或软件品牌。", "muted", True))
         form = QFormLayout()
         form.setSpacing(12)
@@ -216,6 +216,7 @@ class MainWindow(QMainWindow):
     def __init__(self, backend, store: Store, settings: Settings, start_timer=True):
         super().__init__()
         self.store, self.settings, self.backend = store, settings, backend
+        self.is_mac = store.platform == "darwin"
         self.controller = Controller(backend, settings, self.on_event)
         self.events: list[tuple[str, Event]] = []
         self.quitting = False
@@ -230,40 +231,63 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("创作工具箱 · Creative Toolbox")
         self.setWindowIcon(app_icon())
         self.resize(1180, 800)
-        self.setMinimumSize(1020, 720)
+        self.setMinimumSize(1020, 680 if self.is_mac else 720)
         self.appearance = AppearanceStore(store.root / "appearance.json")
         central = WorkspaceCanvas(self.appearance.reduced)
         self.canvas = central
         root = QHBoxLayout(central)
-        root.setContentsMargins(12, 12, 12, 12)
-        root.setSpacing(20)
+        root.setContentsMargins(0, 0, 0, 0) if self.is_mac else root.setContentsMargins(12, 12, 12, 12)
+        root.setSpacing(0 if self.is_mac else 20)
         self.setCentralWidget(central)
         sidebar = GlassPanel(self.appearance.reduced)
         self.sidebar_material = sidebar
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(190)
+        sidebar.setFixedWidth(204 if self.is_mac else 190)
+        if self.is_mac:
+            sidebar.radius = 0
         side = QVBoxLayout(sidebar)
         side.setContentsMargins(14, 22, 14, 18)
         side.setSpacing(8)
-        logo = label("")
-        logo.setPixmap(app_icon().pixmap(54, 54))
-        side.addWidget(logo)
-        side.addSpacing(10)
-        side.addWidget(label("创作工具箱", "brand"))
-        side.addWidget(label("CREATIVE TOOLBOX"))
-        side.addSpacing(24)
-        side.addWidget(label("工作空间"))
+        if self.is_mac:
+            brand_row = QHBoxLayout()
+            logo = label("")
+            logo.setPixmap(app_icon().pixmap(34, 34))
+            brand_row.addWidget(logo)
+            brand_row.addWidget(label("创作工具箱", "brand"))
+            brand_row.addStretch()
+            side.addLayout(brand_row)
+            side.addSpacing(22)
+        else:
+            logo = label("")
+            logo.setPixmap(app_icon().pixmap(54, 54))
+            side.addWidget(logo)
+            side.addSpacing(10)
+            side.addWidget(label("创作工具箱", "brand"))
+            side.addWidget(label("CREATIVE TOOLBOX"))
+            side.addSpacing(24)
+        side.addWidget(label("工作空间", "eyebrow"))
         self.nav = {}
-        for key, name in (("home", "首页"), ("library", "资源库"), ("tools", "工具")):
-            nav = button(name, lambda checked=False, route=key: self.navigate(route))
+        for key, name in (("home", "首页"), ("library", "资源库"), ("projects", "项目"), ("tools", "工具")):
+            nav = button("工作台" if self.is_mac and key == "home" else name, lambda checked=False, route=key: self.navigate(route))
             nav.setCheckable(True)
             nav.setIcon(icon(key))
             nav.setIconSize(QSize(20, 20))
             side.addWidget(nav)
             self.nav[key] = nav
+        self.tool_nav = {}
+        if self.is_mac:
+            side.addSpacing(22)
+            side.addWidget(label("创作工具", "eyebrow"))
+            for key in ("assets", "fonts", "palettes", "calculators"):
+                nav = button(TOOL_BY_ID[key].name, lambda checked=False, tool=key: self.open_tool(tool))
+                nav.setCheckable(True)
+                nav.setIcon(icon(key))
+                nav.setIconSize(QSize(18, 18))
+                side.addWidget(nav)
+                self.tool_nav[key] = nav
         side.addStretch()
         for key, name in (("protection", "创作保护"), ("settings", "设置"), ("help", "帮助")):
-            nav = button(name, lambda checked=False, route=key: self.navigate(route))
+            nav = button("工作台" if self.is_mac and key == "home" else name, lambda checked=False, route=key: self.navigate(route))
             nav.setCheckable(True)
             nav.setIcon(icon(key))
             nav.setIconSize(QSize(20, 20))
@@ -273,14 +297,19 @@ class MainWindow(QMainWindow):
         self.nav_motion = NavigationMotion(sidebar, self.appearance.reduced_motion)
         root.addWidget(sidebar)
         content = QVBoxLayout()
-        content.setContentsMargins(0, 0, 12, 4)
-        content.setSpacing(18)
+        content.setContentsMargins(26, 14, 26, 12) if self.is_mac else content.setContentsMargins(0, 0, 12, 4)
+        content.setSpacing(20 if self.is_mac else 18)
         self.top_material = GlassPanel(self.appearance.reduced, radius=16)
         top = QHBoxLayout(self.top_material)
         top.setContentsMargins(16, 8, 12, 8)
         self.breadcrumb = label("工作空间  /  首页", "eyebrow")
         top.addWidget(self.breadcrumb)
         top.addStretch()
+        if self.is_mac:
+            quick_open = button("搜索工具    ⌘ K", lambda: self.mac_desktop.show_launcher())
+            quick_open.setObjectName("macSearch")
+            quick_open.setAccessibleName("快速打开工具，Command K")
+            top.addWidget(quick_open)
         help_action = button("本页帮助", lambda: self.open_help())
         help_action.setObjectName("secondary")
         help_action.setToolTip("查看当前功能说明 · F1")
@@ -311,7 +340,11 @@ class MainWindow(QMainWindow):
         self.build_preferences()
         self.entry_pages = {}
         for kind in ("home", "library", "tools"):
-            page = WorkspacePage(kind, self.workspace, self.protection_reason)
+            if self.is_mac and kind == "home":
+                from .mac_workspace import MacHomePage
+                page = MacHomePage(self.workspace)
+            else:
+                page = WorkspacePage(kind, self.workspace, self.protection_reason)
             page.open_requested.connect(self.open_tool)
             page.favorite_requested.connect(self.toggle_tool_favorite)
             page.directory_requested.connect(lambda: self.navigate("tools"))
@@ -327,12 +360,15 @@ class MainWindow(QMainWindow):
             self.pages.addWidget(page)
             self.entry_pages[kind] = page
         bottom = QHBoxLayout()
-        self.footer = label("资料保存在本机 · F1 查看帮助", "muted", True)
+        self.footer = label("资料保存在此 Mac    ·    ⌘ K 快速打开    ·    ⌘ , 设置" if self.is_mac else "资料保存在本机 · F1 查看帮助", "muted", True)
         bottom.addWidget(self.footer, 1)
         content.addLayout(bottom)
         self.help_shortcut = QShortcut(QKeySequence("F1"), self)
         self.help_shortcut.activated.connect(lambda: self.open_help())
         self.make_tray()
+        if self.is_mac:
+            from .mac_desktop import MacDesktop
+            self.mac_desktop = MacDesktop(self)
         self.navigate("home")
         self.refresh_profiles()
         self.timer = QTimer(self)
@@ -363,7 +399,7 @@ class MainWindow(QMainWindow):
         return layout
 
     def build_dashboard(self):
-        layout = self.page("创作保护", "在输入空闲时辅助保存。先观察，再开启。")
+        layout = self.page("创作保护", "在输入空闲时执行保存规则。启用前请通过观察模式确认触发条件。")
         hero, hero_layout = panel("hero")
         header = QHBoxLayout()
         header.addWidget(label("自动保存", "eyebrow"))
@@ -371,7 +407,7 @@ class MainWindow(QMainWindow):
         self.profile_count = label("0 个应用已启用", "muted")
         header.addWidget(self.profile_count)
         hero_layout.addLayout(header)
-        self.hero_title = label("先观察，再开启保护", "heroTitle")
+        self.hero_title = label("观察模式", "heroTitle")
         hero_layout.addWidget(self.hero_title)
         self.hero_description = label("观察模式只显示何时满足规则，不会向其他应用发送按键。", "muted", True)
         hero_layout.addWidget(self.hero_description)
@@ -443,7 +479,7 @@ class MainWindow(QMainWindow):
         self.profile_table.cellDoubleClicked.connect(lambda *_: self.edit_profile())
         layout.addWidget(self.profile_table, 1)
         note, col = panel()
-        col.addWidget(label("先确认，再交给工具箱", "section"))
+        col.addWidget(label("规则启用前检查", "section"))
         col.addWidget(label("请先手动保存目标文件，并确认应用内的保存快捷键。自动模式只检查可观测的通用状态；音乐和剪辑预设采用「仅提醒」。双击应用可修改。", "muted", True))
         layout.addWidget(note)
 
@@ -492,7 +528,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(card)
         appearance, appearance_layout = panel()
         appearance_layout.addWidget(label("外观", "section"))
-        appearance_layout.addWidget(label("按你的习惯调整显示效果。", "muted", True))
+        appearance_layout.addWidget(label("设置界面透明效果与动态效果。", "muted", True))
         self.reduce_transparency = QCheckBox("减少透明效果")
         self.reduce_transparency.setChecked(self.appearance.reduced)
         self.reduce_transparency.setToolTip("将导航与顶部栏切换为不透明表面，立即生效。")
@@ -508,7 +544,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(appearance)
         local, local_layout = panel()
         local_layout.addWidget(label("后台运行", "section"))
-        local_layout.addWidget(label("每次启动先进入观察模式。关闭窗口后可在托盘运行；从托盘选择「退出」即可停止。", "muted", True))
+        local_layout.addWidget(label("关闭窗口后仍在后台运行，点击 Dock 图标重新打开。按 ⌘ Q 退出工具箱。每次启动先进入观察模式。" if self.is_mac else "每次启动先进入观察模式。关闭窗口后可在托盘运行；从托盘选择「退出」即可停止。", "muted", True))
         local_layout.addWidget(button("打开数据文件夹", self.open_data), 0, Qt.AlignmentFlag.AlignLeft)
         if self.backend.platform == "darwin":
             local_layout.addWidget(button("打开 macOS 辅助功能设置", lambda: QDesktopServices.openUrl(QUrl("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"))))
@@ -553,13 +589,15 @@ class MainWindow(QMainWindow):
     def mark_route(self, route, title):
         if route != "help":
             self.help_topic = {"home": "start", "library": "library", "tools": "start"}.get(route, route)
+        for nav in self.tool_nav.values():
+            nav.setChecked(False)
         for key, nav in self.nav.items():
             nav.setChecked(key == route)
             if key != route and nav.hasFocus():
                 nav.clearFocus()
         self.nav_motion.select(self.nav[route])
         self.protection_tabs.setVisible(route == "protection")
-        self.breadcrumb.setText("工作空间  /  " + title)
+        self.breadcrumb.setText(("工作台" if title == "首页" else title) if self.is_mac else "工作空间  /  " + title)
 
     def navigate(self, route):
         if self.backup_busy:
@@ -568,6 +606,8 @@ class MainWindow(QMainWindow):
             self.open_help("start")
         elif route == "protection":
             self.open_tool("protection")
+        elif route == "projects":
+            self.open_tool("projects")
         elif route == "settings":
             self.switch_page(3)
         elif route in self.entry_pages:
@@ -586,7 +626,9 @@ class MainWindow(QMainWindow):
             self.tool_pages[tool_id] = page
             if hasattr(page, "feedback"):
                 page.feedback.connect(self.feedback_toast.show_message)
-            if tool_id == "assets":
+            if tool_id == "projects":
+                page.image_requested.connect(lambda reference: self.open_resource(dict(kind="assets", reference=reference)))
+            elif tool_id == "assets":
                 page.palette_provider = lambda: self.palette_page.model
                 page.palette_requested.connect(lambda: self.open_tool("palettes"))
             elif tool_id == "palettes":
@@ -616,6 +658,11 @@ class MainWindow(QMainWindow):
         tool = TOOL_BY_ID[tool_id]
         self.mark_route(tool.area, tool.name)
         self.help_topic = tool_id
+        if tool_id in self.tool_nav:
+            for nav in self.nav.values():
+                nav.setChecked(False)
+            self.tool_nav[tool_id].setChecked(True)
+            self.nav_motion.select(self.tool_nav[tool_id])
         if tool_id == "protection":
             self.select_protection_tab(0)
         self.remember_tool(tool_id)
@@ -640,6 +687,9 @@ class MainWindow(QMainWindow):
                     raise ValueError('未能选中色板，请检查色板页的保存提示')
             elif kind == 'fonts':
                 page.show_family(reference)
+            elif kind == 'projects':
+                if not page.open_project(reference):
+                    return
             self.open_tool(kind)
         except Exception as exc:
             QMessageBox.warning(self, '资料暂未打开', str(exc))
@@ -720,12 +770,17 @@ class MainWindow(QMainWindow):
             self.select_protection_tab(index)
 
     def show_main(self):
-        self.showNormal()
+        if self.isMinimized():
+            self.showNormal()
+        else:
+            self.show()
         self.raise_()
         self.activateWindow()
 
     def closeEvent(self, event):
-        if not self.quitting and self.tray.isVisible():
+        if self.is_mac and hasattr(self, "mac_desktop"):
+            self.mac_desktop.save_geometry()
+        if not self.quitting and (self.is_mac or self.tray.isVisible()):
             self.hide()
             event.ignore()
         else:
@@ -739,10 +794,15 @@ class MainWindow(QMainWindow):
     def quit_app(self):
         if self.backup_busy:
             return
+        projects = self.tool_pages.get("projects")
+        if not self.quitting and projects and not projects.confirm_details():
+            return
         assets = self.tool_pages.get("assets")
         if not self.quitting and assets and not assets.can_exit():
             return
         self.quitting = True
+        if self.is_mac:
+            self.mac_desktop.shutdown()
         self.resource_search.shutdown()
         self.timer.stop()
         self.pages.finish_transition()
@@ -813,7 +873,7 @@ class MainWindow(QMainWindow):
             return
         auto, paused = self.controller.automatic, self.controller.paused
         self.mode_badge.setText("●  已暂停" if paused else ("●  自动模式" if auto else "●  观察模式"))
-        self.hero_title.setText("给创作留一点呼吸" if auto else "先观察，再开启保护")
+        self.hero_title.setText("自动保护已启用" if auto else "观察模式")
         self.hero_description.setText("仅在已启用应用中等待输入停顿；需要时可暂停或切回观察。" if auto else "观察模式只显示何时满足规则，不会向其他应用发送按键。")
         self.arm_button.setText("切回观察模式" if auto else "开启自动保存")
         self.pause_button.setText("恢复" if paused else "暂停")
@@ -859,7 +919,7 @@ class MainWindow(QMainWindow):
                 shortcut = resolve_shortcut(style, custom, self.backend.platform).text()
                 self.live_shortcut.setText(f"{profile.name}  /  {shortcut}  /  {'仅提醒' if profile.reminder_only else '通用模式 · 保存结果未确认'}")
             else:
-                self.live_shortcut.setText("添加或启用应用后，这里会显示它的保存规则。")
+                self.live_shortcut.setText("添加并启用应用规则后，可查看对应的保存配置。")
             if snap.permission:
                 self.live_shortcut.setText(snap.permission)
         except Exception as exc:

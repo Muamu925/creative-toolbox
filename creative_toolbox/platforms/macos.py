@@ -29,15 +29,20 @@ class MacOSBackend:
     def capture(self) -> Snapshot:
         q, ax = self.q, self.ax
         state = q.kCGEventSourceStateHIDSystemState
-        idle = q.CGEventSourceSecondsSinceLastEventType(state, q.kCGAnyInputEventType)
-        estimate = time.monotonic() - idle
-        if estimate > self.event_time + 0.03:
-            self.event_time, self.token = estimate, self.token + 1
         trusted = bool(ax.AXIsProcessTrusted())
         post = bool(q.CGPreflightPostEventAccess())
         listen = bool(q.CGPreflightListenEventAccess())
         can_send = trusted and post and listen
         permission = "" if can_send else "需在系统设置开启辅助功能与输入监控，再重新启动工具箱"
+        # Do not query protected input state until permission is available.
+        # All other local tools work without these permissions.
+        if not can_send:
+            return Snapshot(None, 0.0, self.token, blocked="创作保护等待系统权限",
+                            can_send=False, permission=permission)
+        idle = q.CGEventSourceSecondsSinceLastEventType(state, q.kCGAnyInputEventType)
+        estimate = time.monotonic() - idle
+        if estimate > self.event_time + 0.03:
+            self.event_time, self.token = estimate, self.token + 1
         session = q.CGSessionCopyCurrentDictionary()
         if not session or session.get("CGSSessionScreenIsLocked", False) or not session.get("kCGSessionOnConsoleKey", True):
             return Snapshot(None, idle, self.token, blocked="锁屏或非活动会话", can_send=False)

@@ -1,12 +1,14 @@
 # Creative Toolbox
 
+> Version 0.10.0 is a preview release, adding project specifications, stable image references, independent palette/font candidates, archiving and Markdown briefs. See [Projects](docs/PROJECTS.md). It retains the 0.9.0 Mac workbench remake. See [Mac setup and validation](docs/MACOS.md) for the new native menus, Command shortcuts, Dock reopening, local build and limitations.
+
 **Everyday utilities for design, video editing, and music creation — together on your desktop.**
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.8.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Multi-image boards, project management, batch delivery, and media processing remain planned.
+**Version 0.10.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Project specifications and resource combinations are available. Multi-image boards, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.8.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.8.0/CreativeToolbox-0.8.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.8.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.10.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.0/CreativeToolbox-0.10.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
 ## New in 0.8.0
 
@@ -36,7 +38,7 @@ Tools work independently, without creating a project or enabling automatic savin
 
 ## Try it in two minutes
 
-1. Download and fully extract the Windows ZIP. Open `CreativeToolbox/CreativeToolbox.exe`. Keep the entire folder together. Python is not required.
+1. On Mac, download the DMG for your architecture and drag the app into Applications. On Windows, download and fully extract the ZIP. Open `CreativeToolbox/CreativeToolbox.exe`. Keep the entire folder together. Python is not required.
 2. Open a favorite from Home, or search in **工具** (Tools) for fonts, mm, BPM or colors. Favorite a tool to add it to Home.
 3. For idle-save assistance, configure the target app and shortcut in **创作保护 → 应用规则** (Creative safeguards → App rules). Check timing in **保护状态** (Protection status) observation mode, then test with disposable files.
 
@@ -82,17 +84,17 @@ These are planned capabilities, not features in the current downloads. Prioritie
 | --- | --- |
 | **Further access improvements** | Design / video / music filters and configurable quick access |
 | **Personal resource library** | Cross-resource search, unified backup and batch organization; further connections to fonts and projects |
-| **Projects and delivery** | Specification cards, resource references, project copies and image output; reference boards and batch naming follow later |
+| **Projects and delivery** | Shared resource references and image output, followed by reference boards and batch naming; specification cards and independent project copies are available |
 | **Video and motion** | Media information, timecode/frame calculations and frame extraction, followed by conversion |
 | **Music and audio** | Tap Tempo, bar duration, pitch/frequency conversion and audio specification checks |
 | **Text and productivity** | Uninstalled font folders, smart groups, glyph coverage checks, text cleanup and reusable snippets |
 
-The first access-and-foundations stage and the initial image inbox are implemented. Next: **build a personal resource library → combine resources into projects and deliverables**. Tools remain usable independently. See the [architecture and development plan](docs/ARCHITECTURE_PLAN.md) for implementation order and acceptance criteria, and the [feature map](docs/FEATURE_ROADMAP.md) for candidate capabilities, currently in Chinese.
+The first access-and-foundations stage and the initial image inbox are implemented. Next: **shared resource references → image delivery output**. Tools remain usable independently. See the [architecture and development plan](docs/ARCHITECTURE_PLAN.md) for implementation order and acceptance criteria, and the [feature map](docs/FEATURE_ROADMAP.md) for candidate capabilities, currently in Chinese.
 
 ## Platform status
 
 - **Windows x64:** portable ZIP. Standalone startup and native UI checked locally; built in GitHub Actions.
-- **macOS:** experimental DMG, with architecture in the filename. Built in GitHub Actions; real-device installation, permissions, and creative-app interaction still need validation.
+- **macOS 13+:** preview DMG, with architecture in the filename. Startup and native UI checked on Apple Silicon; installation permissions and creative-app interaction still need validation.
 - **Linux:** not currently supported.
 
 These preview packages are unsigned and not notarized. Sending a save shortcut is **not confirmation that a document was saved**. Recording, MIDI performance, rendering, first-time saves, and custom editor states cannot be detected universally. Start with observation/reminder mode and disposable test documents.
@@ -113,7 +115,7 @@ python run.py
 python -m unittest discover -v
 ```
 
-There are 156 automated tests for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
+There are 183 automated tests (181 passed on the local Mac, with 2 Windows-only tests skipped) for save rules, font organization, palette persistence, floating-window synchronization, calculations, workspace navigation, graceful degradation, image collection, collection migration, palette provenance, help navigation, backup validation, independent restore, appearance persistence, bundled icons and text contrast. Tests do not replace validation in real creative applications.
 
 [Detailed development notes (Chinese)](docs/DEVELOPMENT.md) · [Feature roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 

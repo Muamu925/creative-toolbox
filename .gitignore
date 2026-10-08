@@ -7,3 +7,5 @@ dist/
 .runtime/
 artifacts/
 .DS_Store
+
+.venv-mac/

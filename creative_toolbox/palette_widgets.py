@@ -39,7 +39,7 @@ class FloatingPalette(QWidget):
         self._screens = []
         root = QVBoxLayout(self)
         header = QHBoxLayout()
-        header.addWidget(label('PALETTE / 随手取色'), 1)
+        header.addWidget(label('PALETTE / 悬浮色卡'), 1)
         self.pin = QCheckBox('置顶')
         self.pin.setChecked(True)
         header.addWidget(self.pin)

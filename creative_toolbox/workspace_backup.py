@@ -21,6 +21,11 @@ def validate_metadata(root):
     from .appearance import AppearanceStore
     from .storage import Store
     import sys
+    if (root / "projects.sqlite3").exists():
+        from .projects import ProjectStore
+        projects = ProjectStore(root)
+        if projects.read_only:
+            raise ValueError(projects.warning)
     if (root / 'palettes.json').exists():
         PaletteStore.read(root / 'palettes.json')
     if (root / 'fonts.json').exists():
@@ -62,6 +67,9 @@ def export_workspace(root, output, cancel=None, progress=lambda d, t: None):
                     if path.is_symlink() or path.stat().st_size > MAX_META:
                         raise ValueError('配置文件无效或过大：' + name)
                     (snapshot / name).write_bytes(path.read_bytes())
+            if (root / "projects.sqlite3").exists():
+                from .projects import ProjectStore
+                ProjectStore(root).snapshot(snapshot / "projects.sqlite3")
             validate_metadata(snapshot)
             assets = asset_root(root)
             if (assets / 'library.sqlite3').exists():
@@ -97,7 +105,7 @@ def restore_workspace(archive_path, destination, cancel=None, progress=lambda d,
         with zipfile.ZipFile(archive_path) as archive:
             infos = archive.infolist()
             names = [i.filename for i in infos]
-            allowed = set(METADATA) | {'assets.zip', 'manifest.json'}
+            allowed = set(METADATA) | {'assets.zip', 'manifest.json', 'projects.sqlite3'}
             if len(names) != len(set(names)) or not set(names) <= allowed or 'manifest.json' not in names:
                 raise ValueError('备份包含重复或不允许的文件')
             if archive.getinfo('manifest.json').file_size > 16384:

@@ -10,9 +10,10 @@ def main() -> int:
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--screenshot", type=Path, help="Capture this app's own UI, then exit; always observation mode")
     parser.add_argument("--quit-after", type=int, help="Exit after N seconds (smoke testing)")
+    parser.add_argument("--safe-mode", action="store_true", help="Open local tools without system input monitoring")
     args = parser.parse_args()
     from PySide6.QtCore import QLockFile, QTimer
-    from PySide6.QtGui import QFont
+    from PySide6.QtGui import QFont, QFontDatabase
     from PySide6.QtWidgets import QApplication, QMessageBox
     from .platforms import load_backend
     from .storage import Store, data_directory
@@ -20,9 +21,10 @@ def main() -> int:
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName("CreativeToolbox")
+    app.setApplicationDisplayName("创作工具箱")
     app.setOrganizationName("CreativeToolbox")
     app.setQuitOnLastWindowClosed(False)
-    font = QFont("Microsoft YaHei UI" if sys.platform == "win32" else "PingFang SC", 10)
+    font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont) if sys.platform == "darwin" else QFont("Microsoft YaHei UI", 10)
     app.setFont(font)
     app.setStyleSheet(STYLE)
     app.setWindowIcon(app_icon())
@@ -40,7 +42,11 @@ def main() -> int:
     if not lock.tryLock(100):
         QMessageBox.information(None, "工具箱已在运行", "请从系统托盘或菜单栏打开已有的工具箱。")
         return 0
-    backend = load_backend()
+    if args.screenshot or args.safe_mode:
+        from .platforms.unavailable import UnavailableBackend
+        backend = UnavailableBackend(sys.platform, "本次以安全预览启动，创作保护未启用。")
+    else:
+        backend = load_backend()
     window = MainWindow(backend, store, store.load())
     window.launch_root = launch_root
     window.show()

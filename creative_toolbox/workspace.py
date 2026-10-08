@@ -10,6 +10,11 @@ from pathlib import Path
 from typing import Callable
 
 
+def _projects(root):
+    from .project_ui import ProjectPage
+    return ProjectPage(root)
+
+
 def _assets(root):
     from .assets.page import AssetPage
     return AssetPage(root)
@@ -42,15 +47,17 @@ class Tool:
 
 
 TOOLS = (
-    Tool("assets", "图片素材", "按集合整理参考图，关联配色，置顶查看。",
+    Tool("projects", "项目", "管理项目规格、参考资料与独立配色，导出项目说明。",
+         "项目 规格 客户 交付 归档 project specification brief", "projects", _projects),
+    Tool("assets", "图片素材", "按集合管理参考图片，关联配色并置顶预览。",
          "素材 图片 参考 收集 集合 分组 标签 备份 提色 image asset reference collection", "library", _assets),
-    Tool("fonts", "字体库", "预览字体，按项目分组，再并排对照。",
+    Tool("fonts", "字体库", "预览本机字体，按项目分组并进行多栏对照。",
          "字体 文字 字样 排版 对照 比较 分组 font typography", "library", _fonts),
-    Tool("palettes", "色板", "保存配色、图片提色，随手复制色号。",
+    Tool("palettes", "色板", "管理色板、提取图片配色并复制色号。",
          "色卡 色号 颜色 配色 图片 提色 对比度 hex rgb hsl color palette", "library", _palette),
     Tool("calculators", "创作换算", "换算毫米、像素与 PPI，计算比例和 BPM 音符时长。",
          "毫米 像素 尺寸 等比 缩放 节奏 音乐 延迟 毫秒 mm px ppi bpm size music", "tools", _calculators),
-    Tool("protection", "创作保护", "按应用配置保存节奏，查看规则与触发记录。",
+    Tool("protection", "创作保护", "配置应用保存规则，查看保护状态与触发记录。",
          "自动 保存 保护 规则 日志 ctrl cmd save autosave", "protection",
          requires_protection=True),
 )

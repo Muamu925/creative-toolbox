@@ -79,4 +79,17 @@ def search_resources(root, query, kind='all', limit=100):
                     add('fonts', family, details, family)
         except Exception as exc:
             warnings.append('字体暂未搜索：' + str(exc))
+    if kind in ('all', 'projects'):
+        try:
+            from .projects import ProjectStore, SCENES
+            store = ProjectStore(root)
+            if store.read_only:
+                raise ValueError(store.warning)
+            for project in store.list():
+                details = ' '.join([SCENES[project['scene']][0], project['client'], project['notes'],
+                                    project['delivery'], *project['specs'].values(),
+                                    '已归档' if project['archived'] else '进行中'])
+                add('projects', project['name'], details, project['id'])
+        except Exception as exc:
+            warnings.append('项目暂未搜索：' + str(exc))
     return results, warnings, counts
