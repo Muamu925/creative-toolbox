@@ -1,10 +1,10 @@
-# Mac 使用说明 · 0.10.0
+# Mac 使用说明 · 0.10.1
 
 2026-10-08，北京时间。本次在现有 Python / PySide6 项目上重制 Mac 外壳；图片、字体、配色、换算、创作保护和备份继续使用原有实现与资料格式。
 
 ## 打开应用
 
-本机构建产物是 `dist/CreativeToolbox.app`，可直接打开。安装镜像为 `dist/CreativeToolbox-0.10.0-macOS-arm64-unsigned.dmg`，打开后拖到 Applications。系统最低要求 macOS 13；此包面向 Apple Silicon。Intel 需要在对应架构环境单独构建。包未经过 Developer ID 签名或公证，发布包见 [GitHub 0.10.0](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.0)。
+本地构建生成 `dist/CreativeToolbox.app`，可直接打开。发布镜像为 `CreativeToolbox-0.10.1-macOS-arm64-unsigned.dmg`，打开后拖到 Applications。系统最低要求 macOS 13；此包面向 Apple Silicon。Intel 需要在对应架构环境单独构建。包未经过 Developer ID 签名或公证，发布包见 [GitHub 0.10.1](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.1)。
 
 正式应用使用 `~/Library/Application Support/CreativeToolbox`，沿用已有资料；开发启动器使用隔离的 `.runtime/mac-user`。从 Windows 迁移时使用资源库中的完整备份 / 恢复；不复制旧 `.venv`。字体备份只包含整理信息，不包含字体文件。
 
@@ -71,4 +71,4 @@ QT_QPA_PLATFORM=offscreen .venv-mac/bin/python -m unittest discover -v
 - `platforms/macos.py`：先查权限，再查询输入状态。
 - `app.py`：系统字体、安全预览、截图时使用无按键后端。
 
-0.10.0 在现有 Mac 外壳中加入 [项目规格与资源](PROJECTS.md)。上方 164 项验证为 0.9.0 的历史记录，项目版最新结果见该版本说明。
+0.10.1 在现有 Mac 外壳中加入 [项目规格与资源](PROJECTS.md)。上方 164 项验证为 0.9.0 的历史记录，项目版最新结果见该版本说明。

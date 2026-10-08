@@ -168,7 +168,7 @@ class ProjectTests(unittest.TestCase):
             assets.set_deleted(key, True)
             output = self.base / "missing.md"
             export_project(p, self.root, output)
-            self.assertIn("不可用：图片已移入回收站", output.read_text())
+            self.assertIn("不可用：图片已移入回收站", output.read_text(encoding="utf-8"))
             self.assertEqual(len(self.store.get(p["id"])["resources"]), 3)
         finally:
             assets.close()
@@ -187,7 +187,7 @@ class ProjectTests(unittest.TestCase):
         p["delivery"] = "PNG 输出\n保留透明通道"
         output = self.base / "brief.md"
         export_project(p, self.root, output)
-        content = output.read_text()
+        content = output.read_text(encoding="utf-8")
         self.assertIn("1920 × 1080 px", content)
         self.assertIn("画布尺寸", content)
         self.assertIn("#245CDB", content)
@@ -196,7 +196,7 @@ class ProjectTests(unittest.TestCase):
         with patch("creative_toolbox.projects.os.replace", side_effect=OSError("disk full")):
             with self.assertRaises(OSError):
                 export_project(p, self.root, output)
-        self.assertEqual(output.read_text(), content)
+        self.assertEqual(output.read_text(encoding="utf-8"), content)
         self.assertFalse(list(self.base.glob("*.tmp")))
         with self.assertRaisesRegex(ValueError, "资料目录以外"):
             export_project(p, self.root, self.store.path)

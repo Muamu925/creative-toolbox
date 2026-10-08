@@ -1,14 +1,14 @@
 # Creative Toolbox
 
-> Version 0.10.0 is a preview release, adding project specifications, stable image references, independent palette/font candidates, archiving and Markdown briefs. See [Projects](docs/PROJECTS.md). It retains the 0.9.0 Mac workbench remake. See [Mac setup and validation](docs/MACOS.md) for the new native menus, Command shortcuts, Dock reopening, local build and limitations.
+> Version 0.10.1 is a preview release, adding project specifications, stable image references, independent palette/font candidates, archiving and Markdown briefs. See [Projects](docs/PROJECTS.md). It retains the 0.9.0 Mac workbench remake. See [Mac setup and validation](docs/MACOS.md) for the new native menus, Command shortcuts, Dock reopening, local build and limitations.
 
 **Everyday utilities for design, video editing, and music creation — together on your desktop.**
 
 A local desktop toolbox for small tasks across creative applications. The long-term direction is a shared workspace spanning preparation, creation, and delivery for graphic/UI design, video, 3D, and music workflows.
 
-**Version 0.10.0 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Project specifications and resource combinations are available. Multi-image boards, batch delivery, and media processing remain planned.
+**Version 0.10.1 is an early preview.** It adds a home page, tool search, favorites and recent tools alongside configurable idle-save rules, font organization and comparison, design calculators, and color tools. The image library adds named collections and linked palettes, alongside search, floating references, trash and backup/restore. An offline help center adds searchable guides and contextual help. Project specifications and resource combinations are available. Multi-image boards, batch delivery, and media processing remain planned.
 
-[**Download Windows 0.10.0 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.0/CreativeToolbox-0.10.0-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.0) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
+[**Download Windows 0.10.1 preview**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.1/CreativeToolbox-0.10.1-Windows-x64.zip) · [All downloads / experimental macOS build](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.1) · [简体中文](README.md) · [Roadmap (Chinese)](docs/FEATURE_ROADMAP.md)
 
 ## New in 0.8.0
 

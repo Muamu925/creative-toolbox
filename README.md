@@ -4,21 +4,21 @@
 
 一个本地运行、跨应用使用的桌面工具箱，面向平面/UI 设计、视频剪辑、三维与音乐创作中的日常辅助任务。长期方向是覆盖「准备素材 → 正在创作 → 整理交付」的综合创作工作台。
 
-**当前版本为 0.10.0 项目规格预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。新增项目规格卡、参考图片关联、项目独立配色与字体候选、项目复制与归档、Markdown 说明导出。多图参考板、批量图像交付与音视频处理尚未实现。
+**当前版本为 0.10.1 项目规格预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。新增项目规格卡、参考图片关联、项目独立配色与字体候选、项目复制与归档、Markdown 说明导出。多图参考板、批量图像交付与音视频处理尚未实现。
 
-[**下载 Windows 0.10.0 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.0/CreativeToolbox-0.10.0-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.0) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
+[**下载 Windows 0.10.1 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.1/CreativeToolbox-0.10.1-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.1) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
 
-## 0.10.0：项目规格与资料组合
+## 0.10.1：项目规格与资料组合
 
 侧栏「项目」支持平面 / UI、视频、音乐和三维规格卡。创建仅需名称，随后关联参考图片、保存项目配色副本与字体候选，导出 Markdown 项目说明。复制项目中的配色相互独立，图片引用保留稳定编号。项目可归档恢复，并纳入统一资料搜索与完整备份。
 
-[项目使用说明](docs/PROJECTS.md) · [0.10.0 变更](docs/releases/v0.10.0.md)。本地 Mac 应用位于 `dist/CreativeToolbox.app`；安装包为 `dist/CreativeToolbox-0.10.0-macOS-arm64-unsigned.dmg`。发布包见上方下载入口。
+[项目使用说明](docs/PROJECTS.md) · [0.10.1 变更](docs/releases/v0.10.1.md)。Mac 发布包为 `CreativeToolbox-0.10.1-macOS-arm64-unsigned.dmg`，见上方下载入口。
 
 ## 0.9.0：为 Mac 重制工作台
 
 Mac 版本重新设计工作台、紧凑侧栏和工具栏，图片、字体、色板与换算可直接打开。新增原生菜单栏、⌘K 快速打开、⌘F 页面搜索、⌘, 设置、⌘W 关闭窗口、⌘Q 退出，以及 Dock 重新打开和窗口尺寸记忆。保留原有本地资料和备份格式。
 
-本机运行可双击 `启动 Mac 开发版.command`；已构建应用位于 `dist/CreativeToolbox.app`。当前为浅色界面，适配 macOS 13 及以上；本次本机打包架构为 Apple Silicon / arm64。上述 Mac 改进已包含在 0.10.0 中。
+本机运行可双击 `启动 Mac 开发版.command`；已构建应用位于 `dist/CreativeToolbox.app`。当前为浅色界面，适配 macOS 13 及以上；本次本机打包架构为 Apple Silicon / arm64。上述 Mac 改进已包含在 0.10.1 中。
 
 [Mac 使用、快捷键与验证说明](docs/MACOS.md) · [0.9.0 变更](docs/releases/v0.9.0.md)
 

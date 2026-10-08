@@ -58,7 +58,7 @@ def check():
                 app.processEvents()
                 w.grab().save(str(output / f"{name}-{width}.png"))
         export_project(page.current, root, output / "项目说明示例.md")
-        assert "#355E46" in (output / "项目说明示例.md").read_text()
+        assert "#355E46" in (output / "项目说明示例.md").read_text(encoding="utf-8")
         assert page.store.get(p["id"])["resources"] == p["resources"]
         print("Project specifications, references, independent copies and export verified.", flush=True)
     except Exception as exc:
