@@ -1,158 +1,42 @@
 # 创作工具箱 · Creative Toolbox
 
-**为设计、剪辑与音乐创作，把常用小工具放在一起。**
+创作工具箱为 Windows 和 macOS 上的创作软件提供**空闲自动保存**。为常用软件设置保存间隔和快捷键，当你停下键鼠操作、目标窗口仍在前台时，工具箱会请求当前软件保存文档。图片、字体、配色和项目整理是可按需使用的辅助工具。
 
-一个本地运行、跨应用使用的桌面工具箱，面向平面/UI 设计、视频剪辑、三维与音乐创作中的日常辅助任务。长期方向是覆盖「准备素材 → 正在创作 → 整理交付」的综合创作工作台。
+[Windows 预览版（ZIP）](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.1/CreativeToolbox-0.10.1-Windows-x64.zip) · [Mac 预览版（Apple Silicon DMG）](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.1/CreativeToolbox-0.10.1-macOS-arm64-unsigned.dmg) · [Autosave Lite 源码](https://github.com/Muamu925/creative-toolbox/tree/codex/autosave-lite) · [English](README.en.md)
 
-**当前版本为 0.10.1 项目规格预览版**，已提供首页、工具搜索与收藏，以及智能保存、字体管理与对照、创作换算和色彩工具。图片库支持集合归类、来源整理、单图置顶、备份恢复和关联提色；新增离线帮助中心。新增项目规格卡、参考图片关联、项目独立配色与字体候选、项目复制与归档、Markdown 说明导出。多图参考板、批量图像交付与音视频处理尚未实现。
+## 选择版本
 
-[**下载 Windows 0.10.1 预览版**](https://github.com/Muamu925/creative-toolbox/releases/download/v0.10.1/CreativeToolbox-0.10.1-Windows-x64.zip) · [所有下载 / macOS 实验版](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.1) · [English](README.en.md) · [功能路线](docs/FEATURE_ROADMAP.md)
-
-## 0.10.1：项目规格与资料组合
-
-侧栏「项目」支持平面 / UI、视频、音乐和三维规格卡。创建仅需名称，随后关联参考图片、保存项目配色副本与字体候选，导出 Markdown 项目说明。复制项目中的配色相互独立，图片引用保留稳定编号。项目可归档恢复，并纳入统一资料搜索与完整备份。
-
-[项目使用说明](docs/PROJECTS.md) · [0.10.1 变更](docs/releases/v0.10.1.md)。Mac 发布包为 `CreativeToolbox-0.10.1-macOS-arm64-unsigned.dmg`，见上方下载入口。
-
-## 0.9.0：为 Mac 重制工作台
-
-Mac 版本重新设计工作台、紧凑侧栏和工具栏，图片、字体、色板与换算可直接打开。新增原生菜单栏、⌘K 快速打开、⌘F 页面搜索、⌘, 设置、⌘W 关闭窗口、⌘Q 退出，以及 Dock 重新打开和窗口尺寸记忆。保留原有本地资料和备份格式。
-
-本机运行可双击 `启动 Mac 开发版.command`；已构建应用位于 `dist/CreativeToolbox.app`。当前为浅色界面，适配 macOS 13 及以上；本次本机打包架构为 Apple Silicon / arm64。上述 Mac 改进已包含在 0.10.1 中。
-
-[Mac 使用、快捷键与验证说明](docs/MACOS.md) · [0.9.0 变更](docs/releases/v0.9.0.md)
-
-## 0.8.0：一起找回，一起带走
-
-在「资源库」同时搜索图片、色板和字体整理记录，双击结果回到对应工具。完整备份包含当前图片原件、集合、色板、字体整理及已保存设置；恢复先校验到新目录，切换后重新打开工具箱。
-
-不包含系统字体文件、未保存编辑和活动日志；搜索不扫描整盘，也不枚举未整理的系统字体。[使用与恢复说明](docs/RESOURCE_SEARCH_BACKUP.md)
-
-![统一资源搜索，独立示例资料](assets/demo/resource-search.png)
-
-## 统一的界面
-
-冷白＋钴蓝、统一圆角与线性导航图标，玻璃风格导航与不透明内容区。设置中可开启「减少透明效果」。这是跨平台绘制的近似材质，不是原生 Liquid Glass；图片、色号和字体样张保留原貌。[设计规范](DESIGN.md)
-
-![冷白与钴蓝工作空间](assets/demo/workspace-home.png)
-
-## 现在有哪些工具
-
-| 模块 | 已实现的能力 | 使用场景 |
+| 版本 | 适用场景 | 获取方式 |
 | --- | --- | --- |
-| **首页与工具入口** | 工具搜索、收藏、最近使用、图片、字体与配色资源入口；页面按需加载 | 快速找到工具并继续上次工作 |
-| **项目规格与资料** | 规格卡、稳定图片引用、独立配色与字体候选、复制、归档、Markdown 导出 | 整理项目要求与交付资料 |
-| **图片素材库** | PNG / JPEG 导入、拖放和主动粘贴；待整理、多集合归类、标签、来源、搜索、置顶参考、回收站、备份恢复与关联色板 | 收下参考图，创作时重新找回 |
-| **帮助中心** | 上手指南、功能介绍、常见问题搜索、F1 / 本页帮助、直接打开工具 | 在需要时找到操作说明 |
-| **创作保护** | 按应用配置保存快捷键、输入空闲时间、最短间隔；观察、提醒与自动保存模式 | 在创作间隙辅助执行保存；每次启动先进入观察模式 |
-| **字体与文字** | 本机字体搜索、分组、标签、收藏、备注与备份；自定义样张、2–4 栏真实样式对照 | 按项目整理候选字体，再比较标题与正文效果 |
-| **尺寸与节奏换算** | 毫米 / 像素 / PPI、等比缩放；BPM 对应普通、附点和三连音时长 | 计算出图尺寸、素材比例或延迟参数 |
-| **色彩与对比度** | 自定义色板、悬浮色卡、图片提色、文字对比度、JSON / CSS / PNG 导出 | 取用项目颜色、检查文字搭配、分享色卡 |
+| **Creative Toolbox** | 在 Windows 或 Mac 上按应用配置保存快捷键、间隔与提醒，同时使用创作辅助工具 | [0.10.1 预览版与校验文件](https://github.com/Muamu925/creative-toolbox/releases/tag/v0.10.1) |
+| **Autosave Lite** | 在 Mac 菜单栏中使用空闲保存。每次打开所选软件时确认是否启用，退出该软件后结束本次保护。另可保留 Illustrator、Photoshop 遗留的恢复资料 | [0.1.2 独立源码分支与构建说明](https://github.com/Muamu925/creative-toolbox/tree/codex/autosave-lite) |
 
-这些工具可以独立使用，不要求先建项目或开启自动保存。工具箱不需要账号，图片素材、字体整理、配色库、应用规则和日志保存在本机，图片提色不上传图片。当前界面以中文为主。
+Windows 版需完整解压 ZIP，再运行其中的 `CreativeToolbox.exe`。Mac 版需将 DMG 中的应用拖入「应用程序」，当前镜像适用于 macOS 13 及以上的 Apple Silicon Mac，尚未公证。[Mac 安装与权限说明](docs/MACOS.md)
 
-## 两分钟开始使用
+## 第一次设置自动保存
 
-1. Mac 用户下载对应架构的 DMG，将应用拖入 Applications；Windows 用户下载 ZIP，**完整解压**，打开 `CreativeToolbox/CreativeToolbox.exe`。无需安装 Python，整个文件夹需一起保留。
-2. 从首页打开常用工具，或进入「工具」搜索“字体”“毫米”“BPM”等关键词；点击「收藏」加入首页。
-3. 如需智能保存，先在「创作保护 → 应用规则」配置目标软件与快捷键，通过「保护状态」的观察模式检查触发时机，再用可丢弃文件试用。
+1. **先保存一份测试文档。** 在目标软件中新建文档，手动保存一次，确认该软件的保存快捷键。默认使用 Windows 的 **Ctrl+S** 或 macOS 的 **⌘S**。
+2. **添加应用规则。** 打开工具箱的「创作保护 → 应用规则 → 添加应用」，选择目标程序，启用规则，并设定最短保存间隔和输入空闲时间。Mac 用户可在工具箱「设置」中查看辅助功能和输入监控权限。
+3. **观察触发时机。** 工具箱每次启动都进入观察模式。切回目标文档，做一处可辨认的修改并停下操作，之后可在「活动记录」中查看规则是否触发。录音、演奏和渲染都可能在键鼠空闲时继续，适合在应用规则中选择「仅提醒」。
+4. **开启并验证。** 在「保护状态」点击「开启自动保存」，回到测试文档再做一次修改。等待保存间隔和空闲时间都满足，再等原软件保存完成。关闭并重新打开测试文档，确认修改仍在。如果关闭时仍提示保存，可先取消关闭，检查规则与权限。
 
-第一次使用可点击首页「上手指南」，或侧栏「帮助」；在任一工具页按 **F1** 或点击「本页帮助」查看对应说明。
+工具箱发送快捷键前会再次核对前台窗口和输入状态。同一次持续空闲只处理一次。「活动记录」中的保存请求表示快捷键已发出，文件写入由目标软件完成。若同时安装两个版本，请为同一软件只启用一处自动保存。
 
-关闭主窗口后，若系统托盘可用，工具箱会继续运行。从托盘可以重新打开或退出。
+## 辅助工具
 
-![图片素材库：搜索、整理与预览](assets/demo/asset-inbox.png)
-
-从首页点击「收集图片」，或从「资源库 → 图片素材库」进入。可拖入 PNG / JPEG 或点击「粘贴图片」；图片复制到本地托管目录，不依赖原文件位置。详见 [图片素材库使用说明](docs/ASSET_LIBRARY.md)。
-
-<details>
-<summary>查看帮助中心：搜索问题、了解功能并直接打开工具</summary>
-
-![离线帮助中心](assets/demo/help-center.png)
-
-帮助完全离线可用，涵盖图片、配色、字体、换算、保存规则、备份和窗口操作。
-
-</details>
-
-新入口与数据说明见 [首页与工具使用指南](docs/WORKSPACE.md)。下方为新版字体与色彩工作台的实际窗口。
-
-<details>
-<summary>查看字体库示例：分组、标签与多栏对照</summary>
-
-![字体库：本机字体与示例项目分组](assets/demo/font-library.png)
-
-![字体库：真实可用样式的多栏对照](assets/demo/font-compare.png)
-
-Windows 原生界面，使用本机字体与独立示例整理数据。选择多个字体后可批量加入分组、收藏或添加标签；同一字体可属于多个组。整理结果存储在本机 fonts.json，支持 JSON 备份合并，备份不包含字体文件。
-
-当前只整理系统可用字体；未安装字体文件、系统安装与激活尚未实现。字体家族按本机完整名称匹配，跨系统备份中的不可用字体会保留记录。缺字可能由系统回退显示。详见 [字体库使用说明](docs/FONT_WORKSPACE.md)。
-
-</details>
-
-<details>
-<summary>查看色彩模块示例：悬浮复制、收藏与导出</summary>
-
-![色板：统一界面与保留原色的色板](assets/demo/palette-workspace.png)
-
-Windows 实际窗口，使用独立示例数据。色彩工具是综合工具箱中的一个模块。
-
-支持带 / 不带 `#` 的 HEX、小写 HEX、RGB、RGB 纯数值、HSL，以及整板复制和 CSS 变量。颜色可命名、收藏、筛选、箭头排序；最近 20 次修改可在本次运行内撤销。收藏、顺序、上次色板与复制格式会保留。
-
-![导出的示例 PNG 色卡](assets/demo/palette-sheet.png)
-
-</details>
-
-## 接下来往哪里发展
-
-以下均为规划能力，不包含在当前下载包中；顺序会根据试用反馈调整。
-
-| 方向 | 下一步构思 |
+| 功能 | 用途 |
 | --- | --- |
-| **入口进一步完善** | 按设计 / 视频 / 音乐场景筛选、可配置快速唤起 |
-| **个人资源库** | 已有跨资源检索和完整备份；下一步连接共享资源引用与批量归类 |
-| **项目与交付** | 已有项目规格与独立副本；下一步为共享引用、图片输出，再扩展参考板和批量命名 |
-| **视频与动效** | 媒体信息、时码与帧数换算、抽帧，后续再做媒体转换 |
-| **音乐与声音** | Tap Tempo、小节时长、音高与频率换算、音频规格检查 |
-| **文字与效率** | 未安装字体目录、智能分组、字形覆盖检查、文案整理与常用文本片段 |
+| 图片与配色 | 收集参考图、记录来源、关联色板、提取颜色和检查对比度。[图片素材库](docs/ASSET_LIBRARY.md) |
+| 字体与换算 | 对照本机字体样张，换算尺寸、分辨率和节拍时值。[字体工作区](docs/FONT_WORKSPACE.md) · [工具指南](docs/WORKSPACE.md) |
+| 项目与资源 | 记录项目规格、整理参考素材、导出 Markdown 说明，或备份工具箱内的资料。[项目指南](docs/PROJECTS.md) · [资料备份范围](docs/RESOURCE_SEARCH_BACKUP.md) |
 
-入口与基础第一版已完成，图片素材库已支持集合与关联配色；下一步是 **共享资源引用 → 图片交付输出**。这些模块将共享资源引用与项目规格，同时保留直接打开小工具的方式。实施顺序、架构与验收见 [整体架构与发展方案](docs/ARCHITECTURE_PLAN.md)；全部候选能力见 [功能地图](docs/FEATURE_ROADMAP.md)。
+## 开发与反馈
 
-## 平台与预览版状态
+主分支维护跨平台工具箱，Lite 分支维护原生 macOS 菜单栏应用。报告保存问题时，请注明使用的版本、系统、目标软件，以及「活动记录」和重新打开文档后分别观察到的结果。[问题反馈](https://github.com/Muamu925/creative-toolbox/issues) · [开发与构建](docs/DEVELOPMENT.md) · [贡献指南](CONTRIBUTING.md) · [MIT 许可证](LICENSE)
 
-| 平台 | 当前状态 |
-| --- | --- |
-| Windows x64 | 便携 ZIP；本地独立程序启动和原生界面已检查，GitHub 自动构建 |
-| macOS 13+ | 预览版 DMG，架构见文件名；Apple Silicon 本地启动与原生界面已检查，宿主软件交互仍需验证 |
-| Linux | 当前不支持 |
+<details>
+<summary>GitHub Star 历史</summary>
 
-安装包未签名或公证。**智能保存发送快捷键不等于确认文档保存成功**；录音、MIDI、渲染、首次保存等状态不能通用判断，应先使用观察或仅提醒模式，并在可丢弃文件中测试。使用其他工具不需要开启自动保存。
+[![Creative Toolbox 的 GitHub Star 历史](https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&type=date&legend=top-left)](https://www.star-history.com/?repos=Muamu925%2Fcreative-toolbox&type=date)
 
-颜色工具面向不透明 sRGB，提色结果为近似值，不用于印刷校样。字体缺字时可能由系统回退显示。
-
-## 反馈与参与
-
-- [报告问题](https://github.com/Muamu925/creative-toolbox/issues/new?template=bug_report.yml)：请说明系统、版本、操作步骤和实际结果。
-- [分享使用反馈或需求](https://github.com/Muamu925/creative-toolbox/issues/new?template=feedback.yml)：最想省去的是哪个重复操作？
-- [贡献说明](CONTRIBUTING.md) · [开发文档入口](docs/README.md) · [开发与构建](docs/DEVELOPMENT.md) · [换电脑交接](docs/HANDOFF.md) · [文件夹说明](docs/PROJECT_FILES.md) · [功能路线](docs/FEATURE_ROADMAP.md)
-
-当前有 183 项自动化测试（本机 Mac 通过 181 项，跳过 2 项 Windows 专用测试），覆盖保存规则、字体整理、配色持久化、悬浮同步、换算、工具入口与故障降级，以及素材收集、集合升级、关联色板、帮助导航、备份校验和独立恢复；另覆盖项目规格、引用与副本隔离、导出和外观持久化、图标与文字对比度。自动化测试不能代替所有创作软件的真实兼容性验证。
-
-如果这个工具帮你省下了来回切换的时间，欢迎 Star 收藏，也欢迎告诉我们哪里还不顺手。
-
-## 许可证
-
-项目代码采用 [MIT](LICENSE) 许可证。安装包包含的 Python、Qt / PySide6 等第三方组件仍适用各自的许可证，相关文件随包提供。
-
-## Star 增长历史
-
-如果这个工具对你有帮助，欢迎点亮 Star。点击下方图表可查看详细增长历史。
-
-<a href="https://www.star-history.com/?repos=Muamu925%2Fcreative-toolbox&amp;type=date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&amp;type=date&amp;theme=dark&amp;legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&amp;type=date&amp;legend=top-left" />
-    <img alt="Creative Toolbox 的 GitHub Star 增长历史" src="https://api.star-history.com/chart?repos=Muamu925/creative-toolbox&amp;type=date&amp;legend=top-left" width="800" />
-  </picture>
-</a>
-
-图表由 [Star History](https://www.star-history.com/) 提供，数据更新可能存在缓存延迟。
+</details>
