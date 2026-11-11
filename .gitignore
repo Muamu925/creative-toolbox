@@ -1,0 +1,6 @@
+/build/
+/dist/
+/artifacts/
+.DS_Store
+__pycache__/
+*.py[cod]
